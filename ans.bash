@@ -8,11 +8,17 @@ if [ $test != "root" ]; then
 fi
 
 # récupération de paramètre(s)
-if [ $1== "--local" ]; then
-	localServer="true";
+if [[ -z "$1" ]]; then
+	echo "false";
 else
-	localServer="false";
+	if [ $1 == "--local" ]; then
+		echo "true";
+	else
+		echo "false";
+	fi
 fi
+
+
 
 
 #vérifie la distrib
@@ -26,7 +32,7 @@ else
 fi
 
 # si on utilise le serveur du local ANS
-if [ $localServer=="true" ]; then
+if [ $localServer == "true" ]; then
 	#IP du serveur
 	echo "Entrez l'adresse IP du serveur"
 	read serveur
@@ -57,7 +63,7 @@ if [ $localServer=="true" ]; then
 	fi
 fi
 
-if [ $localServer=="false" ]; then
+if [ $localServer == "false" ]; then
 	# test si on a une connexion internet
 	ping -q -w1 -c1 google.com &>/dev/null
 	if [ $? != 0 ]; then
@@ -80,7 +86,7 @@ apt -y upgrade
 
 if [[ $soixantequatrebits == "true" ]]; then
 
-	if [ $localServer=="true" ]; then
+	if [ $localServer == "true" ]; then
 		# install skype + discord
         type discord
         if [ $? != 0 ]; then
@@ -140,7 +146,7 @@ apt-get -y --fix-missing install firefox-locale-fr
 LC_ALL=fr_FR firefox -no-remote
 
 #télécharge la vidéo et la documentation sur le bureau
-if [ $localServer=="true" ]; then
+if [ $localServer == "true" ]; then
 	fileName=Lubuntu-introduction.avi
 	docName=EDV-Documentation-Lubuntu.odp
 	test -d Desktop
@@ -164,7 +170,7 @@ else
 	mv ANS-Documentation.odp /home/user/Desktop/.
 fi
 
-if [ $localServer=="true" ]; then
+if [ $localServer == "true" ]; then
 	#Restauration sources.list
 	if [[ $soixantequatrebits == "true" ]]; then
 			wget http://$serveur/ubuntu/Packages/sources.list_64bits_ORI
@@ -173,9 +179,9 @@ if [ $localServer=="true" ]; then
 			wget http://$serveur/ubuntu/Packages/sources.list_32bits_ORI
 			mv sources.list_32bits_ORI /etc/apt/sources.list
 	fi
-	#Chargement du test sde son
-		wget http://$serveur/ubuntu/Packages/Test.wav
-		wget http://$serveur/ubuntu/Packages/Test.sh
+	#Chargement du test de son
+	wget http://$serveur/ubuntu/Packages/Test.wav
+	wget http://$serveur/ubuntu/Packages/Test.sh
 fi
 
 
