@@ -168,6 +168,8 @@ else
 	mv Lubuntu-Introduction.avi /home/user/Desktop/.
 	wget https://actionnumeriquesolidaire.org/resources/ANS-Documentation.odp
 	mv ANS-Documentation.odp /home/user/Desktop/.
+	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
+	mv applaudissements.wav /home/user/Desktop/.
 fi
 
 if [ $localServer == "true" ]; then
@@ -248,17 +250,21 @@ hdparm -t -T /dev/sda
 echo "Veuillez vérifier les valeurs de performance en lecture du disque dur et appuyer sur la touche Entrée"
 read
 
-echo "Mémoire vivce disponible : "
+echo "Mémoire vive disponible : "
 lsmem
 echo "Veuillez vérifier que la machine dispose bien de 2Go de RAM et appuyer sur Entrée"
 read
 
-echo "Branchez le wrap (\ avec les enceintes si il n'y a pas de HP interne \)  et vous devriez entrendre 2 sons. Appuyez sur la touche Entrée quand vous êtes prêt"
+echo "Branchez le wrap (\ avec les enceintes si il n'y a pas de HP interne \)  et vous devriez entrendre des sons. Appuyez sur la touche Entrée quand vous êtes prêt"
 read
-arecord -d 10 -f cd -t wav /tmp/test.wav &
-aplay Test.wav
-wait
-aplay /tmp/test.wav
+if [ $localServer == "true" ]; then
+	arecord -d 10 -f cd -t wav /tmp/test.wav &
+	aplay Test.wav
+	wait
+	aplay /tmp/test.wav
+else
+	aplay /home/user/Desktop/applaudissements.wav
+fi
 
 
 
