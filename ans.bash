@@ -9,17 +9,14 @@ fi
 
 # récupération de paramètre(s)
 if [[ -z "$1" ]]; then
-	echo "false";
+	localServer="false"
 else
 	if [ $1 == "--local" ]; then
-		echo "true";
+		localServer="true"
 	else
-		echo "false";
+		localServer="false"
 	fi
 fi
-
-
-
 
 #vérifie la distrib
 distrib="$(lsb_release -a | grep Description)"
