@@ -80,6 +80,45 @@ add-apt-repository "$depotpartenaire"
 apt update
 apt -y upgrade
 
+# vérification du nom de la nom_machine
+sudo apt-get -y install curl
+nom_machine="$(hostname)"
+ANS_ADDR='https://actionnumeriquesolidaire.org'
+result_machine=$(curl -X GET "$ANS_ADDR/api/materiels?page=1&AnsId=$nom_machine" -H 'accept: application/ld+json')
+
+if [[ $result_machine == *"\"hydra:totalItems\":0"* ]]; then
+    echo "Cette machine n'est pas référencée chez ANS. Veuillez renommer la machine avec l'identifiant figurant sur l'étiquette ANS (exemple : 2021071900075)"
+	exit
+else
+    echo "Cette machine est référencée chez ANS."
+fi
+
+# remontée info CPU
+cpu=$(lscpu | grep "Nom de modèle")
+json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Processeur\",\"Description\": \"$cpu\"}"
+curl -X 'POST' \
+  "$ANS_ADDR/api/configs" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
+
+# remontée info mémoire
+memoire=$(lsmem | grep "Mémoire partagée totale")
+json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Mémoire\",\"Description\": \"$memoire\"}"
+curl -X 'POST' \
+  "$ANS_ADDR/api/configs" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
+
+# remontée info disque
+disque=$(df -h | grep /dev/sd)
+json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Disque\",\"Description\": \"$disque\"}"
+curl -X 'POST' \
+  "$ANS_ADDR/api/configs" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
 
 if [[ $soixantequatrebits == "true" ]]; then
 
@@ -143,30 +182,23 @@ apt-get -y --fix-missing install firefox-locale-fr
 LC_ALL=fr_FR firefox -no-remote
 
 #télécharge la vidéo et la documentation sur le bureau
-if [ $localServer == "true" ]; then
-	fileName=Lubuntu-introduction.avi
-	docName=EDV-Documentation-Lubuntu.odp
-	test -d Desktop
-	if [[ $? == 0 ]] ; then
-		wget http://$serveur/ubuntu/Packages/${fileName}
-		mv Lubuntu-introduction.avi /home/user/Desktop/.
-		wget http://$serveur/ubuntu/Packages/${docName}
-		mv EDV-Documentation-Lubuntu.odp /home/user/Desktop/.
-	else
-		wget http://$serveur/ubuntu/Packages/${fileName}
-		mv Lubuntu-introduction.avi /home/user/Bureau/.
-		wget http://$serveur/ubuntu/Packages/${docName}
-		mv EDV-Documentation-Lubuntu.odp /home/user/Bureau/.
-	fi
-else
-	fileName=Lubuntu-Introduction.avi
-	docName=ANS-Documentation.odp
+fileName=Lubuntu-Introduction.avi
+docName=ANS-Documentation.odp
+test -d /home/user/Desktop
+if [[ $? == 0 ]] ; then
 	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
 	mv Lubuntu-Introduction.avi /home/user/Desktop/.
 	wget https://actionnumeriquesolidaire.org/resources/ANS-Documentation.odp
 	mv ANS-Documentation.odp /home/user/Desktop/.
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Desktop/.
+else
+	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
+	mv Lubuntu-Introduction.avi /home/user/Bureau/.
+	wget https://actionnumeriquesolidaire.org/resources/ANS-Documentation.odp
+	mv ANS-Documentation.odp /home/user/Bureau/.
+	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
+	mv applaudissements.wav /home/user/Bureau/.
 fi
 
 if [ $localServer == "true" ]; then
@@ -183,6 +215,33 @@ if [ $localServer == "true" ]; then
 	wget http://$serveur/ubuntu/Packages/Test.sh
 fi
 
+# Diagnostics
+apt-get -y install memtester hdparm
+
+test_mem=$(memtester 250M 1)
+result=$?
+if [ $? == 0 ]; then
+    resultat="Aucune erreur détectée."
+    flag="success"
+else
+    resultat="Erreurs détectées ! La mémoire de cette machine semble défectueuse"
+    flag="danger"
+fi
+json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Mémoire\",\"Flag\": \"$flag\",\"Description\": \" $resultat\" }"
+curl -X 'POST' \
+  "$ANS_ADDR/api/diagnostics" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
+
+
+test_mem=$(hdparm -t /dev/sda | grep Timing)
+json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Disque dur\",\"Description\": \" $test_mem\" }"
+curl -X 'POST' \
+  "$ANS_ADDR/api/diagnostics" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
 
 # vérifications
 test -e /home/user/Desktop/$fileName
@@ -198,6 +257,21 @@ vlc --help
 resultVLC=$?
 libreoffice --help
 resultlibreoffice=$?
+
+# tests son
+echo "_______________________________ Test du son _______________________________"
+
+echo "Branchez le wrap (\ avec les enceintes si il n'y a pas de HP interne \)  et vous devriez entrendre des sons. Appuyez sur la touche Entrée quand vous êtes prêt"
+read
+
+if [ $localServer == "true" ]; then
+	arecord -d 10 -f cd -t wav /tmp/test.wav &
+	aplay Test.wav
+	wait
+	aplay /tmp/test.wav
+else
+	aplay /home/user/Desktop/applaudissements.wav
+fi
 
 clear
 echo "_______________________________ Résultats du script _______________________________"
@@ -240,31 +314,6 @@ else
 		echo "Installation de LibreOffice ------------------------------------------------- ERREUR"
 	fi
 fi
-
-clear
-echo "Test en lecture du disque dur..."
-hdparm -t -T /dev/sda
-echo "Veuillez vérifier les valeurs de performance en lecture du disque dur et appuyer sur la touche Entrée"
-read
-
-echo "Mémoire vive disponible : "
-lsmem
-echo "Veuillez vérifier que la machine dispose bien de 2Go de RAM et appuyer sur Entrée"
-read
-
-echo "Branchez le wrap (\ avec les enceintes si il n'y a pas de HP interne \)  et vous devriez entrendre des sons. Appuyez sur la touche Entrée quand vous êtes prêt"
-read
-if [ $localServer == "true" ]; then
-	arecord -d 10 -f cd -t wav /tmp/test.wav &
-	aplay Test.wav
-	wait
-	aplay /tmp/test.wav
-else
-	aplay /home/user/Desktop/applaudissements.wav
-fi
-
-
-
 
 echo "_______________________"
 echo "< Installation terminée >"
