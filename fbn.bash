@@ -53,6 +53,8 @@ fi
 echo "Souhaitez-vous que l'ordinateur s'éteigne automatiquement lorsque le formatage est terminé ? (o/n)"
 read eteindre
 
+
+nomfic=`date +%Y%m%d_%H%M%S`
 timestamp=`date +%Y-%m-%d_%H-%M-%S`
 echo $timestamp" Démarrage des opérations de formatage"
 echo $timestamp" Démarrage des opérations de formatage" >> sortie.txt
@@ -79,6 +81,8 @@ done
 timestamp=`date +%Y-%m-%d_%H-%M-%S`
 echo $timestamp" Fin des opérations de formatage"
 echo $timestamp" Fin des opérations de formatage" >> sortie.txt
+
+mv ./result.txt $nomfic.txt
 
 if [ $eteindre == "o" ]; then
         halt -p
