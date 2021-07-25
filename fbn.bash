@@ -82,7 +82,7 @@ timestamp=`date +%Y-%m-%d_%H-%M-%S`
 echo $timestamp" Fin des opérations de formatage"
 echo $timestamp" Fin des opérations de formatage" >> sortie.txt
 
-mv ./result.txt $nomfic.txt
+mv ./result.txt ../$nomfic.txt
 
 if [ $eteindre == "o" ]; then
         halt -p
