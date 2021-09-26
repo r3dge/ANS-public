@@ -242,6 +242,32 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d "$json_var"
+  
+  
+result_effacement=$(curl -X GET "$ANS_ADDR/fbn/$nom_machine" -H 'accept: application/json')
+if [[ $result_effacement == *"{\"response\":true}"* ]]; then
+
+	json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Démarrage du formatage bas niveau\",\"Description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+	curl -X 'POST' \
+  	"$ANS_ADDR/api/configs" \
+  	-H 'accept: application/json' \
+  	-H 'Content-Type: application/json' \
+  	-d "$json_var"
+  	
+  	clear
+  	echo "__________________________________________________________________________ Effacement des données ___________________________________________________________________________________________________________________"
+    echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut prendre 15 à 30 minutes, parfois plus si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
+    dd if=/dev/zero bs=4096 status=progress > remplissage
+    rm remplissage
+ 
+	json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Fin du formatage bas niveau\",\"Description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+	curl -X 'POST' \
+  	"$ANS_ADDR/api/configs" \
+  	-H 'accept: application/json' \
+  	-H 'Content-Type: application/json' \
+  	-d "$json_var"
+  	echo "L'effacement des données est terminé"
+fi
 
 # vérifications
 test -e /home/user/Desktop/$fileName
@@ -278,40 +304,40 @@ echo "_______________________________ Résultats du script _____________________
 if [ "$resultPartner" != '' ]; then
 	echo "Activation des dépôts partenaires ---------------------------------------------- OK"
 else
-	echo "Activation des dépôts partenaires ---------------------------------------------- ERREUR"
+	echo -e "\033[31mActivation des dépôts partenaires -------------------------------------- ERREUR\033[30m]$"
 fi
 if [ $resultVideo == 0 ]; then
 	echo "Téléchargement de la vidéo ----------------------------------------------------- OK"
 else
-	echo "Téléchargement de la vidéo ----------------------------------------------------- ERREUR"
+	echo -e "\033[31mTéléchargement de la vidéo --------------------------------------------- ERREUR\033[30m]$"
 fi
 if [ $resultDoc == 0 ]; then
 	echo "Téléchargement de la documentation --------------------------------------------- OK"
 else
-	echo "Téléchargement de la documentation --------------------------------------------- ERREUR"
+	echo -e "\033[31mTéléchargement de la documentation ------------------------------------- ERREUR\033[30m]$"
 fi
 
 if [[ $soixantequatrebits == "true" ]]; then
 	if [ $resultSkype == 0 ]; then
 		echo "Installation de skype ---------------------------------------------------------- OK"
 	else
-		echo "Installation de skype ---------------------------------------------------------- ERREUR"
+		echo -e "\033[31mInstallation de skype ---------------------------------------------- ERREUR\033[30m]$"
 	fi
 	if [ $resultDiscord == 0 ]; then
 		echo "Installation de Discord -------------------------------------------------------- OK"
 	else
-		echo "Installation de Discord -------------------------------------------------------- ERREUR"
+		echo -e "\033[31mInstallation de Discord -------------------------------------------- ERREUR\033[30m]$"
 	fi
 else
 	if [ $resultVLC == 0 ]; then
 		echo "Installation de VLC ------------------------------------------------------------- OK"
 	else
-		echo "Installation de VLC ------------------------------------------------------------- ERREUR"
+		echo -e "\033[31mInstallation de VLC ------------------------------------------------ ERREUR\033[30m]$"
 	fi
 	if [ $resultlibreoffice == 0 ]; then
 		echo "Installation de LibreOffice-------------------------------------------------- OK"
 	else
-		echo "Installation de LibreOffice ------------------------------------------------- ERREUR"
+		echo -e "\033[31mInstallation de LibreOffice ---------------------------------------- ERREUR\033[30m]$"
 	fi
 fi
 
