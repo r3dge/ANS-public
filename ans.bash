@@ -244,30 +244,28 @@ curl -X 'POST' \
   -d "$json_var"
   
   
-result_effacement=$(curl -X GET "$ANS_ADDR/fbn/$nom_machine" -H 'accept: application/json')
-if [[ $result_effacement == *"{\"response\":true}"* ]]; then
+# effacement des données sur l'espace libre restant
+json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Démarrage du formatage bas niveau\",\"Description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+curl -X 'POST' \
+"$ANS_ADDR/api/configs" \
+-H 'accept: application/json' \
+-H 'Content-Type: application/json' \
+-d "$json_var"
 
-	json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Démarrage du formatage bas niveau\",\"Description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-	curl -X 'POST' \
-  	"$ANS_ADDR/api/configs" \
-  	-H 'accept: application/json' \
-  	-H 'Content-Type: application/json' \
-  	-d "$json_var"
-  	
-  	clear
-  	echo "__________________________________________________________________________ Effacement des données ___________________________________________________________________________________________________________________"
-    echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut prendre 15 à 30 minutes, parfois plus si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
-    dd if=/dev/zero bs=4096 status=progress > remplissage
-    rm remplissage
- 
-	json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Fin du formatage bas niveau\",\"Description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-	curl -X 'POST' \
-  	"$ANS_ADDR/api/configs" \
-  	-H 'accept: application/json' \
-  	-H 'Content-Type: application/json' \
-  	-d "$json_var"
-  	echo "L'effacement des données est terminé"
-fi
+clear
+echo "__________________________________________________________________________ Effacement des données ___________________________________________________________________________________________________________________"
+echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut prendre 15 à 30 minutes, parfois plus si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
+dd if=/dev/zero bs=4096 status=progress > remplissage
+rm remplissage
+
+json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Fin du formatage bas niveau\",\"Description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+curl -X 'POST' \
+"$ANS_ADDR/api/configs" \
+-H 'accept: application/json' \
+-H 'Content-Type: application/json' \
+-d "$json_var"
+echo "L'effacement des données est terminé"
+
 
 # vérifications
 test -e /home/user/Desktop/$fileName
