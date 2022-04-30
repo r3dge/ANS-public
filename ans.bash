@@ -20,7 +20,7 @@ fi
 
 #vérifie la distrib
 distrib="$(lsb_release -a | grep Description)"
-if [[ $distrib == *"Ubuntu 20"* ]]; then
+if [[ $distrib == *"Ubuntu 22"* ]]; then
 	soixantequatrebits="true"
 	depotpartenaire="deb http://archive.canonical.com/ubuntu jammy partner"
 else
