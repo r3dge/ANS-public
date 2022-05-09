@@ -94,7 +94,7 @@ else
 fi
 
 # remontée info CPU
-cpu=$(lscpu | grep "Nom de modèle")
+cpu=$(lscpu | grep "Model name")
 json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Processeur\",\"Description\": \"$cpu\"}"
 curl -X 'POST' \
   "$ANS_ADDR/api/configs" \
@@ -103,7 +103,7 @@ curl -X 'POST' \
   -d "$json_var"
 
 # remontée info mémoire
-memoire=$(lsmem | grep "Mémoire partagée totale")
+memoire=$(lsmem | grep "Total online memory")
 json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Mémoire\",\"Description\": \"$memoire\"}"
 curl -X 'POST' \
   "$ANS_ADDR/api/configs" \
