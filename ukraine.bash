@@ -23,6 +23,19 @@ apt-get -y --fix-missing install firefox-locale-uk
 apt-get -y --fix-missing install firefox-locale-ru 
 
 
+#télécharge la vidéo
+echo "Téléchargement de la vidéo"
+test -d /home/user/Desktop
+if [[ $? == 0 ]] ; then
+	wget https://actionnumeriquesolidaire.org/resources/ukraine.mp4
+	mv ukraine.mp4 /home/user/Desktop/.
+else
+	wget https://actionnumeriquesolidaire.org/resources/ukraine.mp4
+	mv ukraine.mp4 /home/user/Bureau/.
+fi
+
+clear
+
 echo "_______________________";
 echo "< Installation terminée >";
 echo " -----------------------";
