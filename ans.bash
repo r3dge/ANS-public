@@ -93,33 +93,6 @@ else
     echo "Cette machine est référencée chez ANS."
 fi
 
-# remontée info CPU
-cpu=$(lscpu | grep "Model name")
-json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Processeur\",\"Description\": \"$cpu\"}"
-curl -X 'POST' \
-  "$ANS_ADDR/api/configs" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d "$json_var"
-
-# remontée info mémoire
-memoire=$(lsmem | grep "Total online memory")
-json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Mémoire\",\"Description\": \"$memoire\"}"
-curl -X 'POST' \
-  "$ANS_ADDR/api/configs" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d "$json_var"
-
-# remontée info disque
-disque=$(df -h | grep /dev/sd)
-json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Disque\",\"Description\": \"$disque\"}"
-curl -X 'POST' \
-  "$ANS_ADDR/api/configs" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d "$json_var"
-
 if [[ $soixantequatrebits == "true" ]]; then
 
 	if [ $localServer == "true" ]; then
@@ -217,7 +190,16 @@ fi
 
 # Diagnostics
 apt-get -y install memtester hdparm
+apt-get -y install libcpanel-json-xs-perl
+apt-get -y install inxi
 
+clear
+echo "------------------------------------------------------- Diagnostique et effacement des données -------------------------------------------------------------"
+echo ""
+echo "Les installations sont terminées."
+
+echo ""
+echo "Démarrage du test mémoire"
 test_mem=$(memtester 250M 1)
 result=$?
 if [ $? == 0 ]; then
@@ -233,8 +215,12 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d "$json_var"
+echo ""
+echo "Résultat du test mémoire : $resultat"
 
 
+echo ""
+echo "Démarrage du test de lecture sur disque"
 test_mem=$(hdparm -t /dev/sda | grep Timing)
 json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Disque dur\",\"Description\": \" $test_mem\" }"
 curl -X 'POST' \
@@ -242,29 +228,101 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d "$json_var"
-  
-  
-# effacement des données sur l'espace libre restant
-json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Démarrage du formatage bas niveau\",\"Description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+echo ""
+echo "Test de lecture sur disque terminé."
+
+echo ""
+hw=$(sudo inxi -G -s -N -A -C -M -I --output json --output-file "$HOME/info.json")
+json=$(cat $HOME/info.json)
+disk=$(sudo lsblk --json -o path,model,serial,size,type,wwn,vendor -d | grep -v loop)
+
+json_var="$nom_machine|HW|$json"
 curl -X 'POST' \
-"$ANS_ADDR/api/configs" \
+  "$ANS_ADDR/api/config" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
+echo " : Remontée de la configuration matérielle"
+
+json_var="$nom_machine|Disque|$disk"
+curl -X 'POST' \
+  "$ANS_ADDR/api/config" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
+echo " : Remontée des informations sur les disques"
+
+echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut être longue si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
+echo ""
+
+
+currentDrive="$(lsblk -o path,state | grep live | sed s/"live"// | xargs)"
+echo "Effacement du disque : $currentDrive"
+echo ""
+json_var="$nom_machine|Effacement|{\"title\":\"Démarrage du formatage bas niveau du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+curl -X 'POST' \
+"$ANS_ADDR/api/config" \
 -H 'accept: application/json' \
 -H 'Content-Type: application/json' \
 -d "$json_var"
+echo " : Remontée de la date-heure de démarrage du formatage"  
 
-clear
-echo "__________________________________________________________________________ Effacement des données ___________________________________________________________________________________________________________________"
-echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut prendre 15 à 30 minutes, parfois plus si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
-dd if=/dev/zero bs=4096 status=progress > remplissage
+dd if=/dev/urandom bs=4096 status=progress > remplissage
 rm remplissage
 
-json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Fin du formatage bas niveau\",\"Description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+json_var="$nom_machine|Effacement|{\"title\":\"Fin du formatage bas niveau du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
 curl -X 'POST' \
-"$ANS_ADDR/api/configs" \
+"$ANS_ADDR/api/config" \
 -H 'accept: application/json' \
 -H 'Content-Type: application/json' \
 -d "$json_var"
-echo "L'effacement des données est terminé"
+echo " : Remontée de la date-heure de fin du formatage"
+
+json_var="$nom_machine|Effacement|{\"title\":\"Méthode de formatage du disque $currentDrive\", \"description\": \"Random Data\"}"
+curl -X 'POST' \
+"$ANS_ADDR/api/config" \
+-H 'accept: application/json' \
+-H 'Content-Type: application/json' \
+-d "$json_var"
+echo " : Remontée des de la méthode de formatage"
+
+
+drives="$(inxi -d | grep ID | tr ' ' '\n')"
+for drive in $drives
+do
+    if [[ $drive =~ ^/dev.*  ]]; then
+      if [[ $drive != $currentDrive ]]; then
+        echo "Effacement du disque : $drive"
+		echo ""
+		
+        json_var="$nom_machine|Effacement|{\"title\":\"Démarrage du formatage bas niveau du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+        curl -X 'POST' \
+        "$ANS_ADDR/api/config" \
+        -H 'accept: application/json' \
+        -H 'Content-Type: application/json' \
+        -d "$json_var"
+        echo " : Remontée de la date-heure de démarrage du formatage"
+        dd if=/dev/urandom of=$drive bs=4096 status=progress
+        json_var="$nom_machine|Effacement|{\"title\":\"Fin du formatage bas niveau du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+        curl -X 'POST' \
+        "$ANS_ADDR/api/config" \
+        -H 'accept: application/json' \
+        -H 'Content-Type: application/json' \
+        -d "$json_var"
+        echo " : Remontée de la date-heure de fin du formatage"
+        
+        json_var="$nom_machine|Effacement|{\"title\":\"Méthode de formatage du disque $drive\", \"description\": \"Random Data\"}"
+        curl -X 'POST' \
+        "$ANS_ADDR/api/config" \
+        -H 'accept: application/json' \
+        -H 'Content-Type: application/json' \
+        -d "$json_var"
+        echo " : Remontée des de la méthode de formatage"
+      fi
+    fi
+done
+
+
 
 
 # vérifications
@@ -283,6 +341,7 @@ libreoffice --help
 resultlibreoffice=$?
 
 # tests son
+echo ""
 echo "_______________________________ Test du son _______________________________"
 
 echo "Branchez le wrap (\ avec les enceintes si il n'y a pas de HP interne \)  et vous devriez entrendre des sons. Appuyez sur la touche Entrée quand vous êtes prêt"
