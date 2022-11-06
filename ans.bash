@@ -232,9 +232,9 @@ echo ""
 echo "Test de lecture sur disque terminé."
 
 echo ""
-hw=$(sudo inxi -G -s -N -A -C -M -I --output json --output-file "$HOME/info.json")
-json=$(cat $HOME/info.json)
-disk=$(sudo lsblk --json -o path,model,serial,size,type,wwn,vendor -d | grep -v loop)
+
+hw=$(inxi -G -s -N -A -C -M -I --output json --output-file "/home/user/info.json")
+json=$(cat /home/user/info.json)
 
 json_var="$nom_machine|HW|$json"
 curl -X 'POST' \
@@ -244,6 +244,7 @@ curl -X 'POST' \
   -d "$json_var"
 echo " : Remontée de la configuration matérielle"
 
+disk=$(lsblk --json -o path,model,serial,size,type,wwn,vendor -d | grep -v loop)
 json_var="$nom_machine|Disque|$disk"
 curl -X 'POST' \
   "$ANS_ADDR/api/config" \
@@ -256,7 +257,15 @@ echo "Démarrage de l'effacement des données de l'espace libre du disque dur. C
 echo ""
 
 
-currentDrive="$(lsblk -o path,state | grep live | sed s/"live"// | xargs)"
+inxi -d | grep ID-1
+driveDetails="$(inxi -d | grep ID-1 | tr ' ' '\n')"
+for detail in $driveDetails
+do
+    if [[ $detail =~ ^/dev.*  ]]; then
+      currentDrive=$detail
+    fi
+done
+
 echo "Effacement du disque : $currentDrive"
 echo ""
 json_var="$nom_machine|Effacement|{\"title\":\"Démarrage du formatage bas niveau du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
@@ -287,7 +296,7 @@ curl -X 'POST' \
 echo " : Remontée des de la méthode de formatage"
 
 
-drives="$(inxi -d | grep ID | grep -v $currentDrive | tr ' ' '\n')"
+drives="$(inxi -d | grep ID | grep -v ID-1 | tr ' ' '\n')"
 for drive in $drives
 do
     if [[ $drive =~ ^/dev.*  ]]; then
