@@ -287,7 +287,7 @@ curl -X 'POST' \
 echo " : Remontée des de la méthode de formatage"
 
 
-drives="$(inxi -d | grep ID | tr ' ' '\n')"
+drives="$(inxi -d | grep ID | grep -v $currentDrive | tr ' ' '\n')"
 for drive in $drives
 do
     if [[ $drive =~ ^/dev.*  ]]; then
