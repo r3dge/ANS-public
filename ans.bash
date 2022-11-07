@@ -268,7 +268,7 @@ done
 
 echo "Effacement du disque : $currentDrive"
 echo ""
-json_var="$nom_machine|Effacement|{\"title\":\"Démarrage du formatage bas niveau du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+json_var="$nom_machine|Effacement|{\"title\":\"Démarrage de l'effacement du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
 curl -X 'POST' \
 "$ANS_ADDR/api/config" \
 -H 'accept: application/json' \
@@ -279,7 +279,7 @@ echo " : Remontée de la date-heure de démarrage du formatage"
 dd if=/dev/urandom bs=4096 status=progress > remplissage
 rm remplissage
 
-json_var="$nom_machine|Effacement|{\"title\":\"Fin du formatage bas niveau du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
 curl -X 'POST' \
 "$ANS_ADDR/api/config" \
 -H 'accept: application/json' \
@@ -287,7 +287,15 @@ curl -X 'POST' \
 -d "$json_var"
 echo " : Remontée de la date-heure de fin du formatage"
 
-json_var="$nom_machine|Effacement|{\"title\":\"Méthode de formatage du disque $currentDrive\", \"description\": \"Random Data\"}"
+json_var="$nom_machine|Effacement|{\"title\":\"Statut du disque $currentDrive\", \"description\": \"Effacé\"}"
+curl -X 'POST' \
+"$ANS_ADDR/api/config" \
+-H 'accept: application/json' \
+-H 'Content-Type: application/json' \
+-d "$json_var"
+echo " : Remontée du statut de formatage"
+
+json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $currentDrive\", \"description\": \"random-fill one-pass\"}"
 curl -X 'POST' \
 "$ANS_ADDR/api/config" \
 -H 'accept: application/json' \
@@ -304,7 +312,7 @@ do
         echo "Effacement du disque : $drive"
 		echo ""
 		
-        json_var="$nom_machine|Effacement|{\"title\":\"Démarrage du formatage bas niveau du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+        json_var="$nom_machine|Effacement|{\"title\":\"Démarrage de l'effacement du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
         curl -X 'POST' \
         "$ANS_ADDR/api/config" \
         -H 'accept: application/json' \
@@ -312,7 +320,7 @@ do
         -d "$json_var"
         echo " : Remontée de la date-heure de démarrage du formatage"
         dd if=/dev/urandom of=$drive bs=4096 status=progress
-        json_var="$nom_machine|Effacement|{\"title\":\"Fin du formatage bas niveau du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+        json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
         curl -X 'POST' \
         "$ANS_ADDR/api/config" \
         -H 'accept: application/json' \
@@ -320,7 +328,15 @@ do
         -d "$json_var"
         echo " : Remontée de la date-heure de fin du formatage"
         
-        json_var="$nom_machine|Effacement|{\"title\":\"Méthode de formatage du disque $drive\", \"description\": \"Random Data\"}"
+		json_var="$nom_machine|Effacement|{\"title\":\"Statut du disque $drive\", \"description\": \"Effacé\"}"
+        curl -X 'POST' \
+        "$ANS_ADDR/api/config" \
+        -H 'accept: application/json' \
+        -H 'Content-Type: application/json' \
+        -d "$json_var"
+        echo " : Remontée du statut de formatage"
+
+        json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $drive\", \"description\": \"Random Data\"}"
         curl -X 'POST' \
         "$ANS_ADDR/api/config" \
         -H 'accept: application/json' \
