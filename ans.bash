@@ -336,7 +336,7 @@ do
         -d "$json_var"
         echo " : Remontée du statut de formatage"
 
-        json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $drive\", \"description\": \"Random Data\"}"
+        json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $drive\", \"description\": \"random-fill one-pass\"}"
         curl -X 'POST' \
         "$ANS_ADDR/api/config" \
         -H 'accept: application/json' \
@@ -447,5 +447,12 @@ echo "            \XXXXX--__/              __-- XXXX/ "
 echo "             -XXXXXXXX---------------  XXXXXX-"
 echo "                \XXXXXXXXXXXXXXXXXXXXXXXXXX/ "
 echo "                  ""VXXXXXXXXXXXXXXXXXXV"" "
+
+
+cd ..
+rm /home/user/infos.json
+rm /home/user/Bureau/applaudissements.wav
+rm /home/user/Desktop/applaudissements.wav
+rm -R /home/user/ANS-public
 
 exit 0
