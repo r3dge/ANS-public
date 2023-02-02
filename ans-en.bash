@@ -178,17 +178,17 @@ fileName=Lubuntu-Introduction-EN.avi
 docName=ANS-Documentation-EN.odp
 test -d /home/user/Desktop
 if [[ $? == 0 ]] ; then
-	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction-EN.avi
-	mv Lubuntu-Introduction.avi /home/user/Desktop/.
-	wget https://actionnumeriquesolidaire.org/resources/ANS-Documentation-EN.odp
-	mv ANS-Documentation.odp /home/user/Desktop/.
+	mv /home/user/ANS-public/Documentation/Lubuntu-Introduction.avi /home/user/Desktop/
+	mkdir /home/user/Desktop/Documentation/
+	mv /home/user/ANS-public/Documentation/en/*.* /home/user/Desktop/Documentation/
+	
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Desktop/.
 else
-	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction-EN.avi
-	mv Lubuntu-Introduction.avi /home/user/Bureau/.
-	wget https://actionnumeriquesolidaire.org/resources/ANS-Documentation-EN.odp
-	mv ANS-Documentation.odp /home/user/Bureau/.
+	mv /home/user/ANS-public/Documentation/Lubuntu-Introduction.avi /home/user/Bureau/.
+	mkdir /home/user/Bureau/Documentation/
+	mv /home/user/ANS-public/Documentation/en/*.* /home/user/Bureau/Documentation/
+
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Bureau/.
 fi
