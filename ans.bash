@@ -158,14 +158,16 @@ LC_ALL=fr_FR firefox -no-remote
 fileName=Lubuntu-Introduction.avi
 test -d /home/user/Desktop
 if [[ $? == 0 ]] ; then
-	mv /home/user/ANS-public/Documentation/Lubuntu-Introduction.avi /home/user/Desktop/
+	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
+	mv Lubuntu-Introduction.avi /home/user/Desktop/
 	mkdir /home/user/Desktop/Documentation/
 	mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Desktop/Documentation/
 	
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Desktop/.
 else
-	mv /home/user/ANS-public/Documentation/Lubuntu-Introduction.avi /home/user/Bureau/.
+	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
+	mv Lubuntu-Introduction.avi /home/user/Bureau/.
 	mkdir /home/user/Bureau/Documentation/
 	mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Bureau/Documentation/
 
