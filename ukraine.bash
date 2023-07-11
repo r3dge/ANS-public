@@ -86,6 +86,8 @@ apt-get -y install libreoffice-l10n-uk
 apt-get -y --fix-missing install firefox-locale-uk 
 apt-get -y --fix-missing install firefox-locale-ru 
 
+# change le layout du clavier en qwerty
+setxkbmap us # ua si on veut le passer en ukrainien
 
 #télécharge la vidéo ukraine
 echo "Téléchargement de la vidéo"
@@ -106,7 +108,7 @@ if [[ $? == 0 ]] ; then
 	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
 	mv Lubuntu-Introduction.avi /home/user/Desktop/
 	mkdir /home/user/Desktop/Documentation/
-	mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Desktop/Documentation/
+	mv /home/user/ANS-public/Documentation/*.* /home/user/Desktop/Documentation/
 	
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Desktop/.
@@ -114,7 +116,7 @@ else
 	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
 	mv Lubuntu-Introduction.avi /home/user/Bureau/.
 	mkdir /home/user/Bureau/Documentation/
-	mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Bureau/Documentation/
+	mv /home/user/ANS-public/Documentation/*.* /home/user/Bureau/Documentation/
 
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Bureau/.
