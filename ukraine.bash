@@ -86,35 +86,22 @@ apt-get -y install libreoffice-l10n-uk
 apt-get -y --fix-missing install firefox-locale-uk 
 apt-get -y --fix-missing install firefox-locale-ru 
 
-# change le layout du clavier en qwerty
-setxkbmap us # ua si on veut le passer en ukrainien
-
-#télécharge la vidéo ukraine
-echo "Téléchargement de la vidéo"
-test -d /home/user/Desktop
-if [[ $? == 0 ]] ; then
-	wget https://actionnumeriquesolidaire.org/resources/ukraine.mp4
-	mv ukraine.mp4 /home/user/Desktop/.
-else
-	wget https://actionnumeriquesolidaire.org/resources/ukraine.mp4
-	mv ukraine.mp4 /home/user/Bureau/.
-fi
-
+# change le layout du clavier en qwerty --> désactivé pour l'instant
+# setxkbmap us # ua si on veut le passer en ukrainien
 
 #télécharge la vidéo et la documentation sur le bureau
-fileName=Lubuntu-Introduction.avi
+fileName=lubuntu-quick-start.mp4
 test -d /home/user/Desktop
 if [[ $? == 0 ]] ; then
-	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
-	mv Lubuntu-Introduction.avi /home/user/Desktop/
+
+	mv /home/user/ANS-public/vdo/en/*.* /home/user/Desktop/
 	mkdir /home/user/Desktop/Documentation/
 	mv /home/user/ANS-public/Documentation/*.* /home/user/Desktop/Documentation/
 	
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Desktop/.
 else
-	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
-	mv Lubuntu-Introduction.avi /home/user/Bureau/.
+	mv /home/user/ANS-public/vdo/en/*.* /home/user/Bureau/
 	mkdir /home/user/Bureau/Documentation/
 	mv /home/user/ANS-public/Documentation/*.* /home/user/Bureau/Documentation/
 
