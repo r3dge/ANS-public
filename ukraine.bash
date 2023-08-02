@@ -96,14 +96,14 @@ if [[ $? == 0 ]] ; then
 
 	mv /home/user/ANS-public/vdo/en/*.* /home/user/Desktop/
 	mkdir /home/user/Desktop/Documentation/
-	mv /home/user/ANS-public/Documentation/*.* /home/user/Desktop/Documentation/
+	mv /home/user/ANS-public/Documentation/* /home/user/Desktop/Documentation/
 	
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Desktop/.
 else
 	mv /home/user/ANS-public/vdo/en/*.* /home/user/Bureau/
 	mkdir /home/user/Bureau/Documentation/
-	mv /home/user/ANS-public/Documentation/*.* /home/user/Bureau/Documentation/
+	mv /home/user/ANS-public/Documentation/* /home/user/Bureau/Documentation/
 
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Bureau/.
