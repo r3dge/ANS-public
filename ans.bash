@@ -77,7 +77,9 @@ add-apt-repository "$depotpartenaire"
 
 # Mises à jour
 apt update
-apt -y upgrade
+#apt -y upgrade
+
+apt -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" full-upgrade
 
 # vérification du nom de la nom_machine
 sudo apt-get -y install curl
@@ -205,7 +207,7 @@ if [ $language == 'LANG=en_US.UTF-8' ]; then
     fileName=lubuntu-quick-start.mp4
 	mv /home/user/ANS-public/vdo/en/*.* /home/user/Desktop/
 	mkdir /home/user/Desktop/Documentation/
-	mv /home/user/ANS-public/Documentation/en/*.* /home/user/Desktop/Documentation/
+	mv /home/user/ANS-public/Documentation/* /home/user/Desktop/Documentation/
 	
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Desktop/.
@@ -408,8 +410,8 @@ resultVideo=$?
 test -e /home/user/Desktop/Documentation
 resultDoc=$?
 resultPartner=$(cat /etc/apt/sources.list | grep "$depotpartenaire")
-snap list skype
-resultSkype=$?
+#snap list skype
+#resultSkype=$?
 snap list discord
 resultDiscord=$?
 vlc --help
@@ -452,11 +454,6 @@ else
 fi
 
 if [[ $soixantequatrebits == "true" ]]; then
-	if [ $resultSkype == 0 ]; then
-		echo "Installation de skype ---------------------------------------------------------- OK"
-	else
-		echo -e "\033[31mInstallation de skype ---------------------------------------------- ERREUR\033[30m]$"
-	fi
 	if [ $resultDiscord == 0 ]; then
 		echo "Installation de Discord -------------------------------------------------------- OK"
 	else
