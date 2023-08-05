@@ -75,7 +75,6 @@ gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click true
 #activation des dépôts partenaires
 add-apt-repository "$depotpartenaire"
 
-
 # Mises à jour
 apt update
 apt -y upgrade
@@ -146,34 +145,72 @@ fi
 apt-get -y install audacity
 
 
-# Passe libreoffice en français
-apt-get -y install libreoffice-l10n-fr
+language="$(cat /etc/default/locale|grep LANG)"
+timezone="$(cat /etc/timezone)"
 
-# Passe Firefox en Français
-locale-gen fr_FR fr_FR.UTF-8
-apt-get -y --fix-missing install firefox-locale-fr
-LC_ALL=fr_FR firefox -no-remote
+# si la langue installée est le français --> packages FR
+if [ $language == 'LANG=fr_FR.UTF-8' ]; then
+	# Passe libreoffice en français
+	apt-get -y install libreoffice-l10n-fr
 
-#télécharge la vidéo et la documentation sur le bureau
-fileName=Lubuntu-Introduction.avi
-test -d /home/user/Desktop
-if [[ $? == 0 ]] ; then
-	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
-	mv Lubuntu-Introduction.avi /home/user/Desktop/
+	# Passe Firefox en Français
+	locale-gen fr_FR fr_FR.UTF-8
+	apt-get -y --fix-missing install firefox-locale-fr
+	LC_ALL=fr_FR firefox -no-remote
+fi
+
+# si la timezone est Ukraine
+if [ $timezone == "Europe/Kiev" ]; then
+	echo "Installation des packages Russes et Ukrainiens"
+
+	# system
+	locale-gen ru_RU ru_RU.UTF-8
+	locale-gen uk_UA uk_UA.UTF-8
+
+	# LibreOffice 
+	apt-get -y install libreoffice-l10n-ru
+	apt-get -y install libreoffice-l10n-uk
+
+	# firefox 
+	apt-get -y --fix-missing install firefox-locale-uk 
+	apt-get -y --fix-missing install firefox-locale-ru 
+fi
+
+fileName=undefined
+# si la langue installée est le français --> vidéo et doc en français
+if [ $language == 'LANG=fr_FR.UTF-8' ]; then
+	#télécharge la vidéo et la documentation sur le bureau
+	fileName=Lubuntu-Introduction.avi
+	test -d /home/user/Desktop
+	if [[ $? == 0 ]] ; then
+		wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
+		mv Lubuntu-Introduction.avi /home/user/Desktop/
+		mkdir /home/user/Desktop/Documentation/
+		mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Desktop/Documentation/
+		
+		wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
+		mv applaudissements.wav /home/user/Desktop/.
+	else
+		wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
+		mv Lubuntu-Introduction.avi /home/user/Bureau/.
+		mkdir /home/user/Bureau/Documentation/
+		mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Bureau/Documentation/
+
+		wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
+		mv applaudissements.wav /home/user/Bureau/.
+	fi
+fi
+
+if [ $language == 'LANG=en_US.UTF-8' ]; then
+    fileName=lubuntu-quick-start.mp4
+	mv /home/user/ANS-public/vdo/en/*.* /home/user/Desktop/
 	mkdir /home/user/Desktop/Documentation/
-	mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Desktop/Documentation/
+	mv /home/user/ANS-public/Documentation/en/*.* /home/user/Desktop/Documentation/
 	
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Desktop/.
-else
-	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
-	mv Lubuntu-Introduction.avi /home/user/Bureau/.
-	mkdir /home/user/Bureau/Documentation/
-	mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Bureau/Documentation/
-
-	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
-	mv applaudissements.wav /home/user/Bureau/.
 fi
+
 
 if [ $localServer == "true" ]; then
 	#Restauration sources.list
