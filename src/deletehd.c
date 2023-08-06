@@ -1,4 +1,4 @@
-// compilation : gcc -o deletehd.c -pthread
+// compilation : gcc -o deletehd deletehd.c -pthread
 // exécution : ./deletehd -d /dev/sda
 
 #include <stdio.h>
@@ -13,6 +13,7 @@ typedef struct {
     long long start;
     long long end;
     long long disk_size;
+    long long total_written;
 } ThreadInfo;
 
 void print_progress(long long current, long long total) {
@@ -30,6 +31,9 @@ void *dd_thread(void *arg) {
         perror("Erreur lors de l'exécution de dd");
         exit(EXIT_FAILURE);
     }
+
+    // Mettre à jour la progression globale
+    info->total_written += (info->end - info->start);
 
     pthread_exit(NULL);
 }
@@ -80,6 +84,7 @@ int main(int argc, char *argv[]) {
         thread_info[i].start = i * block_size;
         thread_info[i].end = (i == num_cores - 1) ? disk_size : (i + 1) * block_size;
         thread_info[i].disk_size = disk_size;
+        thread_info[i].total_written = 0;
 
         int rc = pthread_create(&threads[i], NULL, dd_thread, (void *)&thread_info[i]);
         if (rc) {
@@ -88,15 +93,37 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Attendre la fin de tous les threads
-    for (int i = 0; i < num_cores; i++) {
-        int rc = pthread_join(threads[i], NULL);
-        if (rc) {
-            perror("Erreur lors de l'attente du thread");
-            exit(EXIT_FAILURE);
+    // Attendre la fin de tous les threads et mettre à jour la barre de progression toutes les 10 secondes
+    while (1) {
+        int all_threads_finished = 1;
+        for (int i = 0; i < num_cores; i++) {
+            void *thread_retval;
+            int rc = pthread_join(threads[i], &thread_retval);
+            if (rc) {
+                perror("Erreur lors de l'attente du thread");
+                exit(EXIT_FAILURE);
+            }
+
+            if (thread_retval != NULL) {
+                all_threads_finished = 0;
+            }
         }
+
+        if (all_threads_finished) {
+            break;
+        }
+
+        sleep(10); // Mettre à jour la barre de progression toutes les 10 secondes
+        long long total_written = 0;
+        for (int i = 0; i < num_cores; i++) {
+            total_written += thread_info[i].total_written;
+        }
+        print_progress(total_written, disk_size);
     }
 
     printf("\nTerminé.\n");
     return 0;
 }
+
+
+
