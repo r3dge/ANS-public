@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <pthread.h>
+#include <time.h>
 
 typedef struct {
     int thread_id;
@@ -93,6 +94,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Enregistrer le temps de début d'exécution
+    time_t start_time = time(NULL);
+
     // Attendre la fin de tous les threads et mettre à jour la barre de progression toutes les 10 secondes
     while (1) {
         int all_threads_finished = 1;
@@ -122,8 +126,13 @@ int main(int argc, char *argv[]) {
     }
 
     printf("\nTerminé.\n");
+
+    // Enregistrer le temps de fin d'exécution
+    time_t end_time = time(NULL);
+
+    // Calculer la durée d'exécution
+    time_t execution_time = end_time - start_time;
+    printf("Durée d'exécution : %ld:%02ld:%02ld\n", execution_time / 3600, (execution_time % 3600) / 60, execution_time % 60);
+
     return 0;
 }
-
-
-
