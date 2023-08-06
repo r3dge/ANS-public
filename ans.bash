@@ -75,7 +75,6 @@ gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click true
 #activation des dépôts partenaires
 add-apt-repository "$depotpartenaire"
 
-
 # Mises à jour
 apt update
 apt -y upgrade
@@ -146,33 +145,72 @@ fi
 apt-get -y install audacity
 
 
-# Passe libreoffice en français
-apt-get -y install libreoffice-l10n-fr
+language="$(cat /etc/default/locale|grep LANG)"
+timezone="$(cat /etc/timezone)"
 
-# Passe Firefox en Français
-locale-gen fr_FR fr_FR.UTF-8
-apt-get -y --fix-missing install firefox-locale-fr
-LC_ALL=fr_FR firefox -no-remote
+# si la langue installée est le français --> packages FR
+if [ $language == 'LANG=fr_FR.UTF-8' ]; then
+	# Passe libreoffice en français
+	apt-get -y install libreoffice-l10n-fr
 
-#télécharge la vidéo et la documentation sur le bureau
-fileName=Lubuntu-Introduction.avi
-docName=ANS-Documentation.odp
-test -d /home/user/Desktop
-if [[ $? == 0 ]] ; then
-	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
-	mv Lubuntu-Introduction.avi /home/user/Desktop/.
-	wget https://actionnumeriquesolidaire.org/resources/ANS-Documentation.odp
-	mv ANS-Documentation.odp /home/user/Desktop/.
+	# Passe Firefox en Français
+	locale-gen fr_FR fr_FR.UTF-8
+	apt-get -y --fix-missing install firefox-locale-fr
+	LC_ALL=fr_FR firefox -no-remote
+fi
+
+# si la timezone est Ukraine
+if [ $timezone == "Europe/Kiev" ]; then
+	echo "Installation des packages Russes et Ukrainiens"
+
+	# system
+	locale-gen ru_RU ru_RU.UTF-8
+	locale-gen uk_UA uk_UA.UTF-8
+
+	# LibreOffice 
+	apt-get -y install libreoffice-l10n-ru
+	apt-get -y install libreoffice-l10n-uk
+
+	# firefox 
+	apt-get -y --fix-missing install firefox-locale-uk 
+	apt-get -y --fix-missing install firefox-locale-ru 
+fi
+
+fileName=undefined
+# si la langue installée est le français --> vidéo et doc en français
+if [ $language == 'LANG=fr_FR.UTF-8' ]; then
+	#télécharge la vidéo et la documentation sur le bureau
+	fileName=Lubuntu-Introduction.avi
+	test -d /home/user/Desktop
+	if [[ $? == 0 ]] ; then
+		wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
+		mv Lubuntu-Introduction.avi /home/user/Desktop/
+		mkdir /home/user/Desktop/Documentation/
+		mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Desktop/Documentation/
+		
+		wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
+		mv applaudissements.wav /home/user/Desktop/.
+	else
+		wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
+		mv Lubuntu-Introduction.avi /home/user/Bureau/.
+		mkdir /home/user/Bureau/Documentation/
+		mv /home/user/ANS-public/Documentation/fr/*.* /home/user/Bureau/Documentation/
+
+		wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
+		mv applaudissements.wav /home/user/Bureau/.
+	fi
+fi
+
+if [ $language == 'LANG=en_US.UTF-8' ]; then
+    fileName=lubuntu-quick-start.mp4
+	mv /home/user/ANS-public/vdo/en/*.* /home/user/Desktop/
+	mkdir /home/user/Desktop/Documentation/
+	mv /home/user/ANS-public/Documentation/en/*.* /home/user/Desktop/Documentation/
+	
 	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 	mv applaudissements.wav /home/user/Desktop/.
-else
-	wget https://actionnumeriquesolidaire.org/resources/Lubuntu-Introduction.avi
-	mv Lubuntu-Introduction.avi /home/user/Bureau/.
-	wget https://actionnumeriquesolidaire.org/resources/ANS-Documentation.odp
-	mv ANS-Documentation.odp /home/user/Bureau/.
-	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
-	mv applaudissements.wav /home/user/Bureau/.
 fi
+
 
 if [ $localServer == "true" ]; then
 	#Restauration sources.list
@@ -233,6 +271,7 @@ echo "Test de lecture sur disque terminé."
 
 echo ""
 
+# Remontée de la configuration matérielle
 hw=$(inxi -G -s -N -A -C -M -I --output json --output-file "/home/user/info.json")
 json=$(cat /home/user/info.json)
 
@@ -244,6 +283,7 @@ curl -X 'POST' \
   -d "$json_var"
 echo " : Remontée de la configuration matérielle"
 
+# Remontée des infos sur les disques
 disk=$(lsblk --json -o path,model,serial,size,type,wwn,vendor -d | grep -v loop)
 json_var="$nom_machine|Disque|$disk"
 curl -X 'POST' \
@@ -253,9 +293,21 @@ curl -X 'POST' \
   -d "$json_var"
 echo " : Remontée des informations sur les disques"
 
+# Remontée des infos sur la batterie
+batterie=$(upower -e | grep battery)
+infosBatterie=$(upower -i $batterie)
+json_var="$nom_machine|Batterie|$infosBatterie"
+curl -X 'POST' \
+  "$ANS_ADDR/api/config" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
+echo " : Remontée des infos sur la batterie"
+
+
+# Effacement des disques
 echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut être longue si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
 echo ""
-
 
 inxi -d | grep ID-1
 driveDetails="$(inxi -d | grep ID-1 | tr ' ' '\n')"
@@ -353,7 +405,7 @@ done
 # vérifications
 test -e /home/user/Desktop/$fileName
 resultVideo=$?
-test -e /home/user/Desktop/$docName
+test -e /home/user/Desktop/Documentation
 resultDoc=$?
 resultPartner=$(cat /etc/apt/sources.list | grep "$depotpartenaire")
 snap list skype
