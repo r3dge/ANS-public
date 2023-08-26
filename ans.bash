@@ -313,7 +313,7 @@ curl -X 'POST' \
   -d "$json_var"
 echo " : Remontée des infos sur la batterie"
 
-if [[ $skipFormating == 'true' ]]; then
+if [[ $skipFormating == 'false' ]]; then
 	# Effacement des disques
 	echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut être longue si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
 	echo ""
