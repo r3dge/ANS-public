@@ -12,7 +12,7 @@
 #define CHUNK_SIZE 4096
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-unsigned long long total_bytes_written = 0;
+
 unsigned long long total_disk_size = 0;
 int threads_completed = 0;
 
@@ -119,10 +119,10 @@ int main() {
     int gap = 0;
 
     while (1) {
-        usleep(1000000);  // Sleep for 1 second
-        
+        usleep(1000000); // 1 seconde
         // recalcul à chaque itération
         valeurCourante = getAvailableSpace();
+        //printf("valeur courante : %d", valeurCourante);
         pourcentageInverse = (1.0 - (double)valeurCourante / valeurInitiale) * 30.0;
         pourcentageArrondi = (int)floor(pourcentageInverse);
         if(pourcentageArrondi>avancement_progress_bar){
@@ -130,24 +130,21 @@ int main() {
             for(int i=1;i<=gap;i++){
                 printw("#");
                 refresh();
-                avancement_progress_bar = pourcentageArrondi;
             }
-            break;
+            avancement_progress_bar = pourcentageArrondi;
         }
         if(avancement_progress_bar >= 30){
             termine = true;
             break;
         }
+    }
 
-
-        pthread_mutex_lock(&mutex);
-        total_bytes_written += CHUNK_SIZE; // Increment the total bytes written
-        pthread_mutex_unlock(&mutex);
-
+    while (1) {
         if (threads_completed >= NUM_THREADS) {
             printf("\nAll threads completed. Cleaning up...\n");
             break;
         }
+        usleep(1000000);  // Sleep for 1 second
     }
 
     for (int i = 0; i < NUM_THREADS; ++i) {
