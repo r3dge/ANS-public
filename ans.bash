@@ -19,11 +19,11 @@ else
 fi
 
 skipFormating='false'
-if [[ $1 == "-d" ]]; then
+if [[ $1 == "-skip" ]]; then
     skipFormating='true'
 fi
 
-if [[ $2 == "-d" ]]; then
+if [[ $2 == "-skip" ]]; then
     skipFormating='true'
 fi
 
