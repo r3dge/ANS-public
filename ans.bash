@@ -340,8 +340,8 @@ if [[ $skipFormating == 'false' ]]; then
 	echo " : Remontée de la date-heure de démarrage du formatage"  
 
 	./src/fillsystemdisk
-	rm ./src/remplissage
-	rm ./src/thread_file*
+	rm ./remplissage
+	rm ./thread_file*
 
 	json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
 	curl -X 'POST' \
