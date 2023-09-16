@@ -212,7 +212,7 @@ if [ $language == 'LANG=fr_FR.UTF-8' ]; then
 	fi
 fi
 
-if [ $language == 'LANG=en_US.UTF-8' ] || [ $language == 'LANG=en_GB.UTF-8' ] ; then
+if [ $language == 'LANG=en_*' ] ; then
     fileName=lubuntu-quick-start.mp4
 	mv /home/user/ANS-public/vdo/en/*.* /home/user/Desktop/
 	mkdir /home/user/Desktop/Documentation/
