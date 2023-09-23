@@ -304,16 +304,48 @@ curl -X 'POST' \
   -d "$json_var"
 echo " : Remontée des informations sur les disques"
 
-# Remontée des infos sur la batterie
+# Identification du type de pc (portable ou fixe) en fonction de la présence d'une batterie
 batterie=$(upower -e | grep battery)
-infosBatterie=$(upower -i $batterie)
-json_var="$nom_machine|Batterie|$infosBatterie"
-curl -X 'POST' \
-  "$ANS_ADDR/api/config" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d "$json_var"
-echo " : Remontée des infos sur la batterie"
+if [[ $? == 0 ]]; then
+	# s'il y a une batterie --> il s'agit d'un pc portable
+	laptop=true
+	infosBatterie=$(upower -i $batterie)
+	json_var="$nom_machine|Batterie|$infosBatterie"
+	curl -X 'POST' \
+	"$ANS_ADDR/api/config" \
+	-H 'accept: application/json' \
+	-H 'Content-Type: application/json' \
+	-d "$json_var"
+	echo " : Remontée des infos sur la batterie"
+
+	# vérification que le wifi fonctionne
+	echo ""
+	echo "Vérification du wifi"
+	wifi_networks=$(nmcli dev wifi list)
+	if [[ $wifi_networks == "" ]]; then
+		wifi=false
+		flag="danger"
+		resultat="Le wifi de cette machine n'est pas opérationnel."
+	else
+		wifi=true
+		flag="success"
+		resultat="Le wifi de cette machine fonctionne."
+	fi
+	json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Wifi\",\"Flag\": \"$flag\",\"Description\": \" $resultat\" }"
+	curl -X 'POST' \
+	"$ANS_ADDR/api/diagnostics" \
+	-H 'accept: application/json' \
+	-H 'Content-Type: application/json' \
+	-d "$json_var"
+	echo ""
+	echo "Résultat du test wifi : $resultat"
+else
+	# pas de batterie --> pc fixe --> pas de test wifi
+	laptop=false
+	wifi=false
+	echo "pas de batterie"
+fi
+
 
 if [[ $skipFormating == 'false' ]]; then
 	# Effacement des disques
@@ -476,6 +508,14 @@ else
 		echo "Installation de LibreOffice-------------------------------------------------- OK"
 	else
 		echo -e "\033[31mInstallation de LibreOffice ---------------------------------------- ERREUR\033[30m]$"
+	fi
+fi
+
+if [[ $laptop == true ]]; then
+	if [[ $wifi == true ]]; then
+		echo "WIFI ------------------------------------------------------------------------ OK"
+	else
+		echo -e "\033[31mWIFI----------------------- ---------------------------------------- ERREUR\033[30m]$"
 	fi
 fi
 
