@@ -171,7 +171,7 @@ if [ $language == 'LANG=fr_FR.UTF-8' ]; then
 fi
 
 # si la timezone est Ukraine
-if [ $timezone == "Europe/Kiev" ]; then
+if [ $timezone == "Europe/Kiev" ] || [ $timezone == "Europe/Kyiv" ]; then
 	echo "Installation des packages Russes et Ukrainiens"
 
 	# system
@@ -193,6 +193,7 @@ fi
 fileName=undefined
 # si la langue installée est le français --> vidéo et doc en français
 if [ $language == 'LANG=fr_FR.UTF-8' ]; then
+	echo "Installation documentation et vidéo en Français"
 	#télécharge la vidéo et la documentation sur le bureau
 	fileName=Lubuntu-Introduction.avi
 	test -d /home/user/Desktop
@@ -214,6 +215,7 @@ if [ $language == 'LANG=fr_FR.UTF-8' ]; then
 		mv applaudissements.wav /home/user/Bureau/.
 	fi
 else
+		echo "Installation documentation et vidéo en Anglais"
 		fileName=lubuntu-quick-start.mp4
 		mv /home/user/ANS-public/vdo/en/*.* /home/user/Desktop/
 		mkdir /home/user/Desktop/Documentation/
