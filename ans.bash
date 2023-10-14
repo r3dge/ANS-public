@@ -213,17 +213,17 @@ if [ $language == 'LANG=fr_FR.UTF-8' ]; then
 		wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
 		mv applaudissements.wav /home/user/Bureau/.
 	fi
+else
+		fileName=lubuntu-quick-start.mp4
+		mv /home/user/ANS-public/vdo/en/*.* /home/user/Desktop/
+		mkdir /home/user/Desktop/Documentation/
+		mv /home/user/ANS-public/Documentation/* /home/user/Desktop/Documentation/
+		
+		wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
+		mv applaudissements.wav /home/user/Desktop/.
 fi
 
-if [[ $language == LANG=en_* ]] ; then
-    fileName=lubuntu-quick-start.mp4
-	mv /home/user/ANS-public/vdo/en/*.* /home/user/Desktop/
-	mkdir /home/user/Desktop/Documentation/
-	mv /home/user/ANS-public/Documentation/* /home/user/Desktop/Documentation/
-	
-	wget https://actionnumeriquesolidaire.org/resources/applaudissements.wav
-	mv applaudissements.wav /home/user/Desktop/.
-fi
+
 
 
 if [ $localServer == "true" ]; then
