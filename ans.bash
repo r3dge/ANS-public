@@ -185,6 +185,9 @@ if [ $timezone == "Europe/Kiev" ]; then
 	# firefox 
 	apt-get -y --fix-missing install firefox-locale-uk 
 	apt-get -y --fix-missing install firefox-locale-ru 
+
+	#clavier ukrainien
+	setxkbmap ua
 fi
 
 fileName=undefined
