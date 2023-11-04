@@ -104,7 +104,7 @@ else
     echo "Cette machine est référencée chez ANS."
 fi
 
-apt install rtl8188fu-dkms
+apt -y install rtl8188fu-dkms
 
 if [[ $soixantequatrebits == "true" ]]; then
 
