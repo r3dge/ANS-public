@@ -83,6 +83,7 @@ gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click true
 
 #activation des dépôts partenaires
 add-apt-repository "$depotpartenaire"
+add-apt-repository ppa:kelebek333/kablosuz
 
 # Mises à jour
 apt update
@@ -91,7 +92,7 @@ apt update
 apt -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" full-upgrade
 
 # vérification du nom de la nom_machine
-sudo apt-get -y install curl
+apt-get -y install curl
 nom_machine="$(hostname)"
 ANS_ADDR='https://actionnumeriquesolidaire.org'
 result_machine=$(curl -X GET "$ANS_ADDR/api/materiels?page=1&AnsId=$nom_machine" -H 'accept: application/ld+json')
@@ -102,6 +103,8 @@ if [[ $result_machine == *"\"hydra:totalItems\":0"* ]]; then
 else
     echo "Cette machine est référencée chez ANS."
 fi
+
+apt install rtl8188fu-dkms
 
 if [[ $soixantequatrebits == "true" ]]; then
 
