@@ -82,8 +82,8 @@ fi
 gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click true
 
 #activation des dépôts partenaires
-add-apt-repository "$depotpartenaire"
-add-apt-repository ppa:kelebek333/kablosuz
+add-apt-repository -y "$depotpartenaire"
+add-apt-repository -y ppa:kelebek333/kablosuz
 
 # Mises à jour
 apt update
