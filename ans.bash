@@ -93,7 +93,7 @@ apt -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 # vérification du nom de la nom_machine
 apt-get -y install curl
-nom_machine="$(hostname)"
+nom_machine="$(cat /etc/hostname)"
 ANS_ADDR='https://actionnumeriquesolidaire.org'
 result_machine=$(curl -X GET "$ANS_ADDR/api/materiels?page=1&AnsId=$nom_machine" -H 'accept: application/ld+json')
 
