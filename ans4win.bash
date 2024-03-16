@@ -26,6 +26,7 @@ fi
 # vérification du nom de la nom_machine
 apt-get -y install curl
 nom_machine="$(cat /etc/hostname)"
+user_name="$(ls /home)"
 ANS_ADDR='https://actionnumeriquesolidaire.org'
 result_machine=$(curl -X GET "$ANS_ADDR/api/materiels?page=1&AnsId=$nom_machine" -H 'accept: application/ld+json')
 
@@ -82,8 +83,8 @@ echo "Test de lecture sur disque terminé."
 echo ""
 
 # Remontée de la configuration matérielle
-hw=$(inxi -G -s -N -A -C -M -I --output json --output-file "/home/user/info.json")
-json=$(cat /home/user/info.json)
+hw=$(inxi -G -s -N -A -C -M -I --output json --output-file "/home/$user_name/info.json")
+json=$(cat /home/$user_name/info.json)
 
 json_var="$nom_machine|HW|$json"
 curl -X 'POST' \
@@ -170,7 +171,7 @@ if [[ $skipFormating == 'false' ]]; then
 	-d "$json_var"
 	echo " : Remontée de la date-heure de démarrage du formatage"  
 
-	/home/user/ANS-public/src/fillsystemdisk
+	/home/$user_name/ANS-public/src/fillsystemdisk
 	rm ./remplissage
 	rm ./thread_file*
 
@@ -255,7 +256,7 @@ if [ $localServer == "true" ]; then
 	wait
 	aplay /tmp/test.wav
 else
-	aplay /home/user/Desktop/applaudissements.wav
+	aplay /home/$user_name/Desktop/applaudissements.wav
 fi
 
 clear
@@ -286,9 +287,9 @@ echo "                  ""VXXXXXXXXXXXXXXXXXXV"" "
 
 
 cd ..
-rm /home/user/infos.json
-rm /home/user/Bureau/applaudissements.wav
-rm /home/user/Desktop/applaudissements.wav
-rm -R /home/user/ANS-public
+rm /home/$user_name/infos.json
+rm /home/$user_name/Bureau/applaudissements.wav
+rm /home/$user_name/Desktop/applaudissements.wav
+rm -R /home/$user_name/ANS-public
 
 exit 0
