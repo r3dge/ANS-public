@@ -287,9 +287,7 @@ echo "                  ""VXXXXXXXXXXXXXXXXXXV"" "
 
 
 cd ..
-rm /home/$user_name/infos.json
-rm /home/$user_name/Bureau/applaudissements.wav
-rm /home/$user_name/Desktop/applaudissements.wav
+rm /home/$user_name/info.json
 rm -R /home/$user_name/ANS-public
 
 exit 0
