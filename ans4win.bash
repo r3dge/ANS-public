@@ -23,9 +23,14 @@ if [ $? != 0 ]; then
 	exit
 fi
 
+# Demande à l'utilisateur de saisir le chemin du périphérique
+echo "Veuillez indiquer le numéro ANS de la machine : "
+read nom_machine
+echo "Vérification de la machine..."
+
 # vérification du nom de la nom_machine
 apt-get -y install curl
-nom_machine="$(cat /etc/hostname)"
+#nom_machine="$(cat /etc/hostname)"
 user_name="$(ls /home)"
 ANS_ADDR='https://actionnumeriquesolidaire.org'
 result_machine=$(curl -X GET "$ANS_ADDR/api/materiels?page=1&AnsId=$nom_machine" -H 'accept: application/ld+json')
@@ -161,102 +166,63 @@ if [[ $skipFormating == 'false' ]]; then
 		fi
 	done
 
-	echo "Effacement du disque : $currentDrive"
-	echo ""
-	json_var="$nom_machine|Effacement|{\"title\":\"Démarrage de l'effacement du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/config" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo " : Remontée de la date-heure de démarrage du formatage"  
-
-	/home/$user_name/ANS-public/src/fillsystemdisk
-	rm ./remplissage
-	rm ./thread_file*
-
-	json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/config" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo " : Remontée de la date-heure de fin du formatage"
-
-	json_var="$nom_machine|Effacement|{\"title\":\"Statut du disque $currentDrive\", \"description\": \"Effacé\"}"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/config" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo " : Remontée du statut de formatage"
-
-	json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $currentDrive\", \"description\": \"random-fill one-pass\"}"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/config" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo " : Remontée des de la méthode de formatage"
-
 	drives="$(inxi -d | grep ID | grep -v ID-1 | tr ' ' '\n')"
 	for drive in $drives
 	do
 		if [[ $drive =~ ^/dev.*  ]]; then
-		if [[ $drive != $currentDrive ]]; then
-			echo "Effacement du disque : $drive"
-			echo ""
-			
-			json_var="$nom_machine|Effacement|{\"title\":\"Démarrage de l'effacement du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-			curl -X 'POST' \
-			"$ANS_ADDR/api/config" \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-			-d "$json_var"
-			echo " : Remontée de la date-heure de démarrage du formatage"
-			dd if=/dev/urandom of=$drive bs=4096 status=progress
-			json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-			curl -X 'POST' \
-			"$ANS_ADDR/api/config" \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-			-d "$json_var"
-			echo " : Remontée de la date-heure de fin du formatage"
-			
-			json_var="$nom_machine|Effacement|{\"title\":\"Statut du disque $drive\", \"description\": \"Effacé\"}"
-			curl -X 'POST' \
-			"$ANS_ADDR/api/config" \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-			-d "$json_var"
-			echo " : Remontée du statut de formatage"
+			if [[ $drive != $currentDrive ]]; then
+				inxi -d | grep USB
+				result_usb = $?
+				start_deleting = true
+				if [[ $result_usb == 1 ]]; then
+					echo "Voulez-vous effacer le disque $drive ? (o/n)"
+					read reponse
+					if [[ $reponse != 'o']]; then
+						start_deleting = false
+					fi
+				else
 
-			json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $drive\", \"description\": \"random-fill one-pass\"}"
-			curl -X 'POST' \
-			"$ANS_ADDR/api/config" \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-			-d "$json_var"
-			echo " : Remontée des de la méthode de formatage"
-		fi
+				fi
+
+				if [[ start_deleting == true ]]; then
+					echo "Effacement du disque : $drive"
+					echo ""
+				
+					json_var="$nom_machine|Effacement|{\"title\":\"Démarrage de l'effacement du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+					curl -X 'POST' \
+					"$ANS_ADDR/api/config" \
+					-H 'accept: application/json' \
+					-H 'Content-Type: application/json' \
+					-d "$json_var"
+					echo " : Remontée de la date-heure de démarrage du formatage"
+					dd if=/dev/urandom of=$drive bs=4096 status=progress
+					json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+					curl -X 'POST' \
+					"$ANS_ADDR/api/config" \
+					-H 'accept: application/json' \
+					-H 'Content-Type: application/json' \
+					-d "$json_var"
+					echo " : Remontée de la date-heure de fin du formatage"
+					
+					json_var="$nom_machine|Effacement|{\"title\":\"Statut du disque $drive\", \"description\": \"Effacé\"}"
+					curl -X 'POST' \
+					"$ANS_ADDR/api/config" \
+					-H 'accept: application/json' \
+					-H 'Content-Type: application/json' \
+					-d "$json_var"
+					echo " : Remontée du statut de formatage"
+
+					json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $drive\", \"description\": \"random-fill one-pass\"}"
+					curl -X 'POST' \
+					"$ANS_ADDR/api/config" \
+					-H 'accept: application/json' \
+					-H 'Content-Type: application/json' \
+					-d "$json_var"
+					echo " : Remontée des de la méthode de formatage"
+				fi
+			fi
 		fi
 	done
-fi
-
-# tests son
-echo ""
-echo "_______________________________ Test du son _______________________________"
-
-echo "Branchez le wrap (\ avec les enceintes si il n'y a pas de HP interne \)  et vous devriez entrendre des sons. Appuyez sur la touche Entrée quand vous êtes prêt"
-read
-
-if [ $localServer == "true" ]; then
-	arecord -d 10 -f cd -t wav /tmp/test.wav &
-	aplay Test.wav
-	wait
-	aplay /tmp/test.wav
-else
-	aplay /home/$user_name/Desktop/applaudissements.wav
 fi
 
 clear
