@@ -172,19 +172,17 @@ if [[ $skipFormating == 'false' ]]; then
 		if [[ $drive =~ ^/dev.*  ]]; then
 			if [[ $drive != $currentDrive ]]; then
 				inxi -d | grep USB
-				result_usb = $?
-				start_deleting = true
+				result_usb=$?
+				start_deleting=true
 				if [[ $result_usb == 1 ]]; then
 					echo "Voulez-vous effacer le disque $drive ? (o/n)"
 					read reponse
-					if [[ $reponse != 'o']]; then
-						start_deleting = false
+					if [[ $reponse != 'o' ]]; then
+						start_deleting=false
 					fi
-				else
-
 				fi
 
-				if [[ start_deleting == true ]]; then
+				if [[ $start_deleting == true ]]; then
 					echo "Effacement du disque : $drive"
 					echo ""
 				
