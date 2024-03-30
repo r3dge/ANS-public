@@ -157,24 +157,24 @@ if [[ $skipFormating == 'false' ]]; then
 	echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut être longue si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
 	echo ""
 
-	inxi -d | grep ID-1
-	driveDetails="$(inxi -d | grep ID-1 | tr ' ' '\n')"
-	for detail in $driveDetails
-	do
-		if [[ $detail =~ ^/dev.*  ]]; then
-		currentDrive=$detail
-		fi
-	done
+	#inxi -d | grep ID-1
+	#driveDetails="$(inxi -d | grep ID-1 | tr ' ' '\n')"
+	#for detail in $driveDetails
+	#do
+	#	if [[ $detail =~ ^/dev.*  ]]; then
+	#	currentDrive=$detail
+	#	fi
+	#done
 
 	drives="$(inxi -d | grep ID | grep -v ID-1 | tr ' ' '\n')"
 	for drive in $drives
 	do
 		if [[ $drive =~ ^/dev.*  ]]; then
-			if [[ $drive != $currentDrive ]]; then
+			#if [[ $drive != $currentDrive ]]; then
 				inxi -d | grep USB
 				result_usb=$?
 				start_deleting=true
-				if [[ $result_usb == 1 ]]; then
+				if [[ $result_usb == 0 ]]; then
 					echo "Voulez-vous effacer le disque $drive ? (o/n)"
 					read reponse
 					if [[ $reponse != 'o' ]]; then
@@ -217,8 +217,10 @@ if [[ $skipFormating == 'false' ]]; then
 					-H 'Content-Type: application/json' \
 					-d "$json_var"
 					echo " : Remontée des de la méthode de formatage"
+				else
+					echo "Le disque $drive n'a pas été effacé à la demande de l'utilisateur".
 				fi
-			fi
+			#fi
 		fi
 	done
 fi
