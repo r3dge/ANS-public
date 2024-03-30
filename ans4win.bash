@@ -175,7 +175,7 @@ if [[ $skipFormating == 'false' ]]; then
 				result_usb=$?
 				start_deleting=true
 				if [[ $result_usb == 0 ]]; then
-					echo "Voulez-vous effacer le disque $drive ? (o/n)"
+					echo "Voulez-vous effacer le disque USB $drive ? (o/n)"
 					read reponse
 					if [[ $reponse != 'o' ]]; then
 						start_deleting=false
@@ -218,7 +218,7 @@ if [[ $skipFormating == 'false' ]]; then
 					-d "$json_var"
 					echo " : Remontée des de la méthode de formatage"
 				else
-					echo "Le disque $drive n'a pas été effacé à la demande de l'utilisateur".
+					echo "Le disque $drive n'a pas été effacé".
 				fi
 			#fi
 		fi
