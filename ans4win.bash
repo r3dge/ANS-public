@@ -166,7 +166,7 @@ if [[ $skipFormating == 'false' ]]; then
 	#	fi
 	#done
 
-	drives="$(inxi -d | grep ID | grep -v ID-1 | tr ' ' '\n')"
+	drives="$(inxi -d | grep ID | tr ' ' '\n')"
 	for drive in $drives
 	do
 		if [[ $drive =~ ^/dev.*  ]]; then
