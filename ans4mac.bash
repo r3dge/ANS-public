@@ -45,7 +45,7 @@ else
 fi
 
 # Remontée de la configuration matérielle
-hw=$(inxi -G -s -N -A -C -M -I -D --output json --output-file "./info.json")
+hw=$(inxi -G -s -N -A -C -M -I -D --output json --output-file "/Users/user/Ans-public/info.json")
 json=$(cat ./info.json)
 
 json_var="$nom_machine|HW|$json"
