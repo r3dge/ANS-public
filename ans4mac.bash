@@ -24,6 +24,11 @@ if [ $? != 0 ]; then
 	exit
 fi
 
+# installation de homebrew
+
+NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install inxi
+
 # Demande à l'utilisateur de saisir le chemin du périphérique
 echo "Veuillez indiquer le numéro ANS de la machine : "
 read nom_machine
@@ -53,8 +58,8 @@ if [[ $skipFormating == 'false' ]]; then
 	echo " : Remontée de la date-heure de démarrage du formatage"  
 
 	./src/fillsystemdisk4mac
-	rm ./remplissage
-	rm ./thread_file*
+	rm -f ./remplissage
+	rm -f ./thread_file*
 
 	json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
 	curl -X 'POST' \
