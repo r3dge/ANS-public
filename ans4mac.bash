@@ -2,8 +2,8 @@
 
 # test si on est root ou sudo
 test=`whoami`
-if [ $test != "root" ]; then
-  echo "Erreur : A lancer avec sudo"
+if [ $test == "root" ]; then
+  echo "Erreur : Ne pas lancer avec sudo"
   exit
 fi
 
@@ -24,8 +24,7 @@ if [ $? != 0 ]; then
 	exit
 fi
 
-# installation de homebrew
-
+# installation de homebrew + inxi
 NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install inxi
 
@@ -44,6 +43,18 @@ if [[ $result_machine == *"\"hydra:totalItems\":0"* ]]; then
 else
     echo "Cette machine est référencée chez ANS."
 fi
+
+# Remontée de la configuration matérielle
+hw=$(inxi -G -s -N -A -C -M -I -D --output json --output-file "./info.json")
+json=$(cat ./info.json)
+
+json_var="$nom_machine|HW|$json"
+curl -X 'POST' \
+  "$ANS_ADDR/api/config" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
+echo " : Remontée de la configuration matérielle"
 
 if [[ $skipFormating == 'false' ]]; then
 	# Effacement des disques
