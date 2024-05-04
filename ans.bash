@@ -27,15 +27,9 @@ if [[ $2 == "-s" ]]; then
     skipFormating='true'
 fi
 
-#vérifie la distrib
-distrib="$(lsb_release -a | grep Description)"
-if [[ $distrib == *"Ubuntu 22"* ]]; then
-	soixantequatrebits="true"
-	depotpartenaire="deb http://archive.canonical.com/ubuntu jammy partner"
-else
-	soixantequatrebits="false"
-	depotpartenaire="deb http://archive.canonical.com/ubuntu bionic partner"
-fi
+# récupère le codename de la version pour ajouter les dépôts partenaires
+codename=`lsb_release -a | grep Codename | awk '{ print $2 }'`
+depotpartenaire="deb http://archive.canonical.com/ubuntu $codename partner"
 
 # si on utilise le serveur du local ANS
 if [ $localServer == "true" ]; then
@@ -79,7 +73,7 @@ if [ $localServer == "false" ]; then
 fi
 
 # active le tap-to-click
-gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click true
+# gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click true
 
 #activation des dépôts partenaires
 add-apt-repository -y "$depotpartenaire"
