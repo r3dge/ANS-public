@@ -72,8 +72,26 @@ if [ $localServer == "false" ]; then
 	fi
 fi
 
-# active le tap-to-click
-# gsettings set org.gnome.desktop.peripherals.touchpad tap-to-click true
+
+
+# ----------- A TESTER ---------------------------
+# active le tap-to-click 
+#if [ -f "/etc/X11/xorg.conf.d/70-synaptics.conf" ]; then
+#else
+#    touch /etc/X11/xorg.conf.d/70-synaptics.conf
+#    chmod 644 /etc/X11/xorg.conf.d/70-synaptics.conf
+#fi
+#echo 'Section "InputClass"
+#    Identifier "touchpad catchall"
+#    Driver "synaptics"
+#    MatchIsTouchpad "on"
+#    Option "TapButton1" "1"
+#    Option "TapButton2" "2"
+#    Option "TapButton3" "3"
+#EndSection' | tee -a /etc/X11/xorg.conf.d/70-synaptics.conf
+# ----------- A TESTER ---------------------------
+
+
 
 #activation des dépôts partenaires
 add-apt-repository -y "$depotpartenaire"
@@ -98,6 +116,7 @@ else
     echo "Cette machine est référencée chez ANS."
 fi
 
+# l'install mauelle du driver n'est plus disponible en 24.04
 #apt -y install rtl8188fu-dkms
 
 if [[ $soixantequatrebits == "true" ]]; then
