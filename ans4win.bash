@@ -210,7 +210,7 @@ if [[ $skipFormating == 'false' ]]; then
 					-d "$json_var"
 					echo " : Remontée du statut de formatage"
 
-					json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $drive\", \"description\": \"random-fill one-pass\"}"
+					json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $drive\", \"description\": \"zero-fill one-pass\"}"
 					curl -X 'POST' \
 					"$ANS_ADDR/api/config" \
 					-H 'accept: application/json' \

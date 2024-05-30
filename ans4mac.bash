@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # test si on est root ou sudo
-test=`whoami`
-if [ $test == "root" ]; then
-  echo "Erreur : Ne pas lancer avec sudo"
-  exit
-fi
+#test=`whoami`
+#if [ $test == "root" ]; then
+#  echo "Erreur : Ne pas lancer avec sudo"
+#  exit
+#fi
 
 # récupération de paramètre(s)
 skipFormating='false'
@@ -24,14 +24,23 @@ if [ $? != 0 ]; then
 	exit
 fi
 
-# installation de homebrew + inxi
-NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install inxi
+# Nom du fichier où le numéro ANS sera stocké
+fichier_ans="ansid.txt"
 
-# Demande à l'utilisateur de saisir le chemin du périphérique
-echo "Veuillez indiquer le numéro ANS de la machine : "
-read nom_machine
-echo "Vérification de la machine..."
+# Vérifie si le fichier existe et contient un numéro ANS
+if [ -f "$fichier_ans" ]; then
+    # Lire le contenu du fichier
+    nom_machine=$(cat "$fichier_ans")
+    echo "Le numéro ANS de la machine est : $nom_machine"
+else
+    # Demande à l'utilisateur de saisir le numéro ANS
+    echo "Veuillez indiquer le numéro ANS de la machine : "
+    read nom_machine
+    
+    # Sauvegarde le numéro ANS dans le fichier
+    echo "$nom_machine" > "$fichier_ans"
+    echo "Le numéro ANS $nom_machine a été sauvegardé dans $fichier_ans"
+fi
 
 # vérification du nom de la nom_machine
 ANS_ADDR='https://actionnumeriquesolidaire.org'
@@ -45,22 +54,32 @@ else
 fi
 
 # Remontée de la configuration matérielle
-hw=$(inxi -G -s -N -A -C -M -I -D --output json --output-file "/Users/user/Ans-public/info.json")
-json=$(cat ./info.json)
+hw=$(system_profiler SPHardwareDataType > "/Users/user/Ans-public/info.txt")
+txt=$(cat ./info.txt)
 
-json_var="$nom_machine|HW|$json"
+json_var="$nom_machine|HW|$txt"
 curl -X 'POST' \
-  "$ANS_ADDR/api/config" \
+  "$ANS_ADDR/api/config/mac" \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d "$json_var"
 echo " : Remontée de la configuration matérielle"
 
+# Remontée des infos sur les disques
+disk=$(system_profiler SPSerialATADataType)
+json_var="$nom_machine|Disque|$disk"
+curl -X 'POST' \
+  "$ANS_ADDR/api/config/mac" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d "$json_var"
+echo " : Remontée des informations sur les disques"
+
 if [[ $skipFormating == 'false' ]]; then
 	# Effacement des disques
 	echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut être longue si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
 	echo ""
-	json_var="$nom_machine|Effacement|{\"title\":\"Démarrage de l'effacement du disque\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+	json_var="$nom_machine|Effacement|{\"title\":\"Démarrage de l'effacement du disque 1\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
 	curl -X 'POST' \
 	"$ANS_ADDR/api/config" \
 	-H 'accept: application/json' \
@@ -72,7 +91,7 @@ if [[ $skipFormating == 'false' ]]; then
 	rm -f ./remplissage
 	rm -f ./thread_file*
 
-	json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
+	json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque 1\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
 	curl -X 'POST' \
 	"$ANS_ADDR/api/config" \
 	-H 'accept: application/json' \
@@ -80,7 +99,7 @@ if [[ $skipFormating == 'false' ]]; then
 	-d "$json_var"
 	echo " : Remontée de la date-heure de fin du formatage"
 
-	json_var="$nom_machine|Effacement|{\"title\":\"Statut du disque\", \"description\": \"Effacé\"}"
+	json_var="$nom_machine|Effacement|{\"title\":\"Statut du disque 1\", \"description\": \"Effacé\"}"
 	curl -X 'POST' \
 	"$ANS_ADDR/api/config" \
 	-H 'accept: application/json' \
@@ -88,7 +107,7 @@ if [[ $skipFormating == 'false' ]]; then
 	-d "$json_var"
 	echo " : Remontée du statut de formatage"
 
-	json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque\", \"description\": \"random-fill one-pass\"}"
+	json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque 1\", \"description\": \"zero-fill one-pass\"}"
 	curl -X 'POST' \
 	"$ANS_ADDR/api/config" \
 	-H 'accept: application/json' \

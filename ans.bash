@@ -241,9 +241,6 @@ else
 		mv applaudissements.wav /home/user/Desktop/.
 fi
 
-
-
-
 if [ $localServer == "true" ]; then
 	#Restauration sources.list
 	if [[ $soixantequatrebits == "true" ]]; then
@@ -412,7 +409,7 @@ if [[ $skipFormating == 'false' ]]; then
 	-d "$json_var"
 	echo " : Remontée du statut de formatage"
 
-	json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $currentDrive\", \"description\": \"random-fill one-pass\"}"
+	json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $currentDrive\", \"description\": \"zero-fill one-pass\"}"
 	curl -X 'POST' \
 	"$ANS_ADDR/api/config" \
 	-H 'accept: application/json' \
