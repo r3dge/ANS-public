@@ -87,7 +87,7 @@ if [[ $skipFormating == 'false' ]]; then
 	-d "$json_var"
 	echo " : Remontée de la date-heure de démarrage du formatage"  
 
-	./src/fillsystemdisk4mac
+	./bin/fillsystemdisk4mac
 	rm -f ./remplissage
 	rm -f ./thread_file*
 

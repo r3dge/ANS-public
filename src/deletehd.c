@@ -14,8 +14,10 @@ typedef struct {
     long long start;
     long long end;
     long long disk_size;
-    long long total_written;
 } ThreadInfo;
+
+pthread_mutex_t progress_mutex = PTHREAD_MUTEX_INITIALIZER;
+long long total_written = 0;
 
 void print_progress(long long current, long long total) {
     float progress = (float)current / total * 100.0;
@@ -26,15 +28,17 @@ void print_progress(long long current, long long total) {
 void *dd_thread(void *arg) {
     ThreadInfo *info = (ThreadInfo *)arg;
     char command[256];
-    snprintf(command, sizeof(command), "dd if=/dev/urandom of=%s bs=4096 seek=%lld count=%lld", info->destination, info->start / 4096, (info->end - info->start) / 4096);
+    snprintf(command, sizeof(command), "dd if=/dev/urandom of=%s bs=4096 seek=%lld count=%lld oflag=direct", info->destination, info->start / 4096, (info->end - info->start) / 4096);
     int ret = system(command);
     if (ret != 0) {
         perror("Erreur lors de l'exécution de dd");
-        exit(EXIT_FAILURE);
+        pthread_exit((void*)1);
     }
 
     // Mettre à jour la progression globale
-    info->total_written += (info->end - info->start);
+    pthread_mutex_lock(&progress_mutex);
+    total_written += (info->end - info->start);
+    pthread_mutex_unlock(&progress_mutex);
 
     pthread_exit(NULL);
 }
@@ -68,6 +72,10 @@ int main(int argc, char *argv[]) {
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "blockdev --getsize64 %s", destination);
     FILE* fp = popen(cmd, "r");
+    if (fp == NULL) {
+        perror("Erreur lors de l'obtention de la taille du disque");
+        exit(EXIT_FAILURE);
+    }
     long long disk_size;
     fscanf(fp, "%lld", &disk_size);
     pclose(fp);
@@ -85,7 +93,6 @@ int main(int argc, char *argv[]) {
         thread_info[i].start = i * block_size;
         thread_info[i].end = (i == num_cores - 1) ? disk_size : (i + 1) * block_size;
         thread_info[i].disk_size = disk_size;
-        thread_info[i].total_written = 0;
 
         int rc = pthread_create(&threads[i], NULL, dd_thread, (void *)&thread_info[i]);
         if (rc) {
@@ -98,31 +105,34 @@ int main(int argc, char *argv[]) {
     time_t start_time = time(NULL);
 
     // Attendre la fin de tous les threads et mettre à jour la barre de progression toutes les 10 secondes
+    int threads_finished[num_cores];
+    for (int i = 0; i < num_cores; i++) {
+        threads_finished[i] = 0;
+    }
+
     while (1) {
+        sleep(10); // Mettre à jour la barre de progression toutes les 10 secondes
+
+        pthread_mutex_lock(&progress_mutex);
+        print_progress(total_written, disk_size);
+        pthread_mutex_unlock(&progress_mutex);
+
         int all_threads_finished = 1;
         for (int i = 0; i < num_cores; i++) {
-            void *thread_retval;
-            int rc = pthread_join(threads[i], &thread_retval);
-            if (rc) {
-                perror("Erreur lors de l'attente du thread");
-                exit(EXIT_FAILURE);
-            }
-
-            if (thread_retval != NULL) {
-                all_threads_finished = 0;
+            if (!threads_finished[i]) {
+                void *thread_retval;
+                int rc = pthread_join(threads[i], &thread_retval);
+                if (rc == 0) { // Le thread est terminé
+                    threads_finished[i] = 1;
+                } else {
+                    all_threads_finished = 0; // Il reste des threads actifs
+                }
             }
         }
 
         if (all_threads_finished) {
             break;
         }
-
-        sleep(10); // Mettre à jour la barre de progression toutes les 10 secondes
-        long long total_written = 0;
-        for (int i = 0; i < num_cores; i++) {
-            total_written += thread_info[i].total_written;
-        }
-        print_progress(total_written, disk_size);
     }
 
     printf("\nTerminé.\n");
@@ -136,3 +146,5 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
+

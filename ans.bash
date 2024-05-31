@@ -389,7 +389,7 @@ if [[ $skipFormating == 'false' ]]; then
 	-d "$json_var"
 	echo " : Remontée de la date-heure de démarrage du formatage"  
 
-	/home/user/ANS-public/src/fillsystemdisk
+	/home/user/ANS-public/bin/fillsystemdisk
 	rm ./remplissage
 	rm ./thread_file*
 
