@@ -72,35 +72,12 @@ if [ $localServer == "false" ]; then
 	fi
 fi
 
-
-
-# ----------- A TESTER ---------------------------
-# active le tap-to-click 
-#if [ -f "/etc/X11/xorg.conf.d/70-synaptics.conf" ]; then
-#else
-#    touch /etc/X11/xorg.conf.d/70-synaptics.conf
-#    chmod 644 /etc/X11/xorg.conf.d/70-synaptics.conf
-#fi
-#echo 'Section "InputClass"
-#    Identifier "touchpad catchall"
-#    Driver "synaptics"
-#    MatchIsTouchpad "on"
-#    Option "TapButton1" "1"
-#    Option "TapButton2" "2"
-#    Option "TapButton3" "3"
-#EndSection' | tee -a /etc/X11/xorg.conf.d/70-synaptics.conf
-# ----------- A TESTER ---------------------------
-
-
-
 #activation des dépôts partenaires
 add-apt-repository -y "$depotpartenaire"
 add-apt-repository -y ppa:kelebek333/kablosuz
 
 # Mises à jour
 apt update
-#apt -y upgrade
-
 apt -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" full-upgrade
 
 # vérification du nom de la nom_machine
@@ -115,9 +92,6 @@ if [[ $result_machine == *"\"hydra:totalItems\":0"* ]]; then
 else
     echo "Cette machine est référencée chez ANS."
 fi
-
-# l'install mauelle du driver n'est plus disponible en 24.04
-#apt -y install rtl8188fu-dkms
 
 if [[ $soixantequatrebits == "true" ]]; then
 
@@ -170,7 +144,6 @@ else
 fi
 
 apt-get -y install audacity
-
 
 language="$(cat /etc/default/locale|grep LANG)"
 timezone="$(cat /etc/timezone)"
@@ -255,7 +228,12 @@ if [ $localServer == "true" ]; then
 	wget http://$serveur/ubuntu/Packages/Test.sh
 fi
 
-# Diagnostics
+# installation des polices microsoft
+echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | sudo debconf-set-selections
+sudo apt-get install -y ttf-mscorefonts-installer
+
+
+# installation des outils de diagnostique
 apt-get -y install memtester hdparm
 apt-get -y install libcpanel-json-xs-perl
 apt-get -y install inxi
