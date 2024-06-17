@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <ncurses.h>
 #include <math.h>
+#include <errno.h> // Pour gérer les erreurs système
 
 #define CHUNK_SIZE 4096
 
@@ -31,7 +32,7 @@ int getAvailableSpace() {
     return available_space;
 }
 
-void write_to_file() {
+int write_to_file() {
     char filename[] = "remplissage";
 
     char command[150]; // Déclaration de la variable "command"
@@ -39,8 +40,15 @@ void write_to_file() {
 
     int result = system(command); // Exécution de la commande
     if (result != 0) {
-        fprintf(stderr, "Error: Command execution failed for file %s\n", filename);
+        // Vérifier si l'erreur est due à "No space left on device"
+        if (errno == ENOSPC) {
+            printf("Le disque est plein. Arrêt du programme.\n");
+        } else {
+            fprintf(stderr, "Error: Command execution failed for file %s\n", filename);
+        }
+        return 0;
     }
+    return 1;
 }
 
 void clear_console_line() {
@@ -82,13 +90,11 @@ int main() {
     printw("\t\t\t\t\t");
     printw("[");
 
-    bool termine = false;
     int avancement_progress_bar = 0;
     int gap = 0;
 
     // Écriture séquentielle dans un seul fichier et mise à jour de la barre de progression
-    while (1) {
-        write_to_file();
+    while (write_to_file() == 1) {
 
         usleep(1000000); // 1 seconde
         valeurCourante = getAvailableSpace();
@@ -107,8 +113,7 @@ int main() {
             avancement_progress_bar = pourcentageArrondi;
         }
         if (avancement_progress_bar >= 30) {
-            termine = true;
-            break;
+            break; // Arrêter si la barre de progression est complète
         }
     }
 
@@ -118,3 +123,4 @@ int main() {
     endwin();
     return 0;
 }
+
