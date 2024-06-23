@@ -24,16 +24,6 @@ if [ $? != 0 ]; then
 	exit
 fi
 
-# Vérification que la version du script est à jour
-git_status=$(git status --porcelain)
-
-if [ -n "$git_status" ]; then
-  echo "Cette version du script n'est pas à jour. Veuillez faire un "git pull" ou un commit des modifications"
-  exit 1
-else
-  echo "Le script est à jour."
-fi
-
 # Nom du fichier où le numéro ANS sera stocké
 fichier_ans="ansid.txt"
 
@@ -50,6 +40,17 @@ else
     # Sauvegarde le numéro ANS dans le fichier
     echo "$nom_machine" > "$fichier_ans"
     echo "Le numéro ANS $nom_machine a été sauvegardé dans $fichier_ans"
+fi
+rm $fichier_ans
+
+# Vérification que la version du script est à jour
+git_status=$(git status --porcelain)
+
+if [ -n "$git_status" ]; then
+  echo "Cette version du script n'est pas à jour. Veuillez faire un "git pull" ou un commit des modifications"
+  exit 1
+else
+  echo "Le script est à jour."
 fi
 
 # vérification du nom de la nom_machine
