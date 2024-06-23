@@ -72,6 +72,16 @@ if [ $localServer == "false" ]; then
 	fi
 fi
 
+# Vérification que la version du script est à jour
+git_status=$(git status --porcelain)
+
+if [ -n "$git_status" ]; then
+  echo "Cette version du script n'est pas à jour. Veuillez faire un "git pull" ou un commit des modifications"
+  exit 1
+else
+  echo "Le script est à jour."
+fi
+
 #activation des dépôts partenaires
 add-apt-repository -y "$depotpartenaire"
 add-apt-repository -y ppa:kelebek333/kablosuz

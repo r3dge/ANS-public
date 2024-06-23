@@ -23,6 +23,16 @@ if [ $? != 0 ]; then
 	exit
 fi
 
+# Vérification que la version du script est à jour
+git_status=$(git status --porcelain)
+
+if [ -n "$git_status" ]; then
+  echo "Cette version du script n'est pas à jour. Veuillez faire un "git pull" ou un commit des modifications"
+  exit 1
+else
+  echo "Le script est à jour."
+fi
+
 # Demande à l'utilisateur de saisir le chemin du périphérique
 echo "Veuillez indiquer le numéro ANS de la machine : "
 read nom_machine
