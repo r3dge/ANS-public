@@ -314,6 +314,8 @@ echo " : Remontée des informations sur les disques"
 batterie=$(upower -e | grep battery)
 if [[ $? == 0 ]]; then
 	# s'il y a une batterie --> il s'agit d'un pc portable
+	curl -X 'GET' "$ANS_ADDR/api/config/setMaterielType/$nom_machine/Laptop"
+
 	laptop=true
 	infosBatterie=$(upower -i $batterie)
 	json_var="$nom_machine|Batterie|$infosBatterie"
@@ -347,6 +349,7 @@ if [[ $? == 0 ]]; then
 	echo "Résultat du test wifi : $resultat"
 else
 	# pas de batterie --> pc fixe --> pas de test wifi
+	curl -X 'GET' "$ANS_ADDR/api/config/setMaterielType/$nom_machine/PC%20Fixe"
 	laptop=false
 	wifi=false
 	echo "pas de batterie"
