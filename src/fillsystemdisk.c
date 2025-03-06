@@ -57,14 +57,7 @@ void *thread_function(void *arg) {
 
     char command[150]; // Déclaration de la variable "command"
     
-    snprintf(command, sizeof(command), "dd if=/dev/zero bs=%d > %s", CHUNK_SIZE, full_path);
-
-
-    if (strlen(command) >= sizeof(full_path)) {
-        fprintf(stderr, "Path is too long\n");
-        pthread_exit(NULL);
-    }
-
+    snprintf(command, sizeof(command), "dd if=/dev/zero bs=%d of=%s", CHUNK_SIZE, full_path);
     system(command);
 
     pthread_mutex_lock(&mutex);
