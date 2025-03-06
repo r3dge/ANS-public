@@ -16,23 +16,36 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 unsigned long long total_disk_size = 0;
 int threads_completed = 0;
 
-int getAvailableSpace(){
+double getAvailableSpace() {
     FILE *fp;
     char buffer[128];
-    int available_space = -1; // Initialize to an invalid value
+    double available_space = -1; // Initialiser à une valeur invalide
+    char unit[3]; // Pour stocker l'unité (G, M, T, etc.)
 
+    // Exécute la commande pour récupérer l'espace libre
     fp = popen("df -h . | awk 'NR==2 {print $4}'", "r");
     if (fp == NULL) {
         perror("popen");
-        return 1;
+        return -1; // Retourne une valeur invalide en cas d'erreur
     }
 
+    // Lire la sortie
     if (fgets(buffer, sizeof(buffer), fp) != NULL) {
-        sscanf(buffer, "%dG", &available_space);
+        if (sscanf(buffer, "%lf%2s", &available_space, unit) == 2) {
+            // Convertir en Go si nécessaire
+            if (strcmp(unit, "M") == 0) {
+                available_space /= 1024; // Convertir Mo -> Go
+            } else if (strcmp(unit, "T") == 0) {
+                available_space *= 1024; // Convertir To -> Go
+            } else if (strcmp(unit, "K") == 0) {
+                available_space /= (1024 * 1024); // Convertir Ko -> Go
+            }
+            // Si unité = G, rien à faire
+        }
     }
 
     pclose(fp);
-    return available_space;
+    return available_space; // Retourne l'espace libre en Go
 }
 
 void *thread_function(void *arg) {
@@ -73,8 +86,8 @@ int main() {
         return 1;
     }
 
-    int valeurInitiale;
-    int valeurCourante;
+    double valeurInitiale;
+    double valeurCourante;
     double pourcentageInverse;
     int pourcentageArrondi;
 
@@ -97,7 +110,7 @@ int main() {
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
 
     printw("\n\n\n\n");
-    printw("\t\t\t\t\tEspace disque à effacer : %d GB\n", valeurInitiale);
+    printw("\t\t\t\t\tEspace disque à effacer : %f GB\n", valeurInitiale);
     printw("\n\n");
     printw("\t\t\t\t\tEffacement du disque en cours...\n\n");
     printw("\t\t\t\t\t");
@@ -123,7 +136,7 @@ int main() {
         // recalcul à chaque itération
         valeurCourante = getAvailableSpace();
         //printf("valeur courante : %d", valeurCourante);
-        pourcentageInverse = (1.0 - (double)valeurCourante / valeurInitiale) * 30.0;
+        pourcentageInverse = (1.0 - valeurCourante / valeurInitiale) * 30.0;
         pourcentageArrondi = (int)floor(pourcentageInverse);
         if(pourcentageArrondi>avancement_progress_bar){
             gap = pourcentageArrondi - avancement_progress_bar;
@@ -141,7 +154,7 @@ int main() {
 
     while (1) {
         if (threads_completed >= NUM_THREADS) {
-            printf("\nAll threads completed. Cleaning up...\n");
+            printf("\nTous les threads sont terminés. Nettoyage...\n");
             break;
         }
         usleep(1000000);  // Sleep for 1 second
@@ -151,11 +164,13 @@ int main() {
         pthread_join(threads[i], NULL);
     }
 
-    for (long i = 0; i < NUM_THREADS; ++i) {
-        char filename[20];
-        snprintf(filename, sizeof(filename), "thread_file_%ld", i);
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        char filename[32];
+        snprintf(filename, sizeof(filename), "thread_file_%d", i);
         remove(filename);
     }
+    remove("remplissage");
+
     endwin();
     return 0;
 }
