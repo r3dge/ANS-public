@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Installation des dépendances pour killbit"
+echo "Installation des dépendances pour killbit..."
 
 # sudo apt update
 
@@ -16,4 +16,8 @@ sudo apt install -y coreutils
 sudo apt install -y libcpanel-json-xs-perl
 sudo apt install -y smartmontools
 sudo apt install -y nvme-cli
+sudo apt install -y memtester
+
+# nouvelles dépendances
+sudo apt install -y memtester
 
