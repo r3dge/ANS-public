@@ -7,17 +7,6 @@ if [ $test != "root" ]; then
   exit
 fi
 
-# récupération de paramètre(s)
-if [[ -z "$1" ]]; then
-	localServer="false"
-else
-	if [ $1 == "--local" ]; then
-		localServer="true"
-	else
-		localServer="false"
-	fi
-fi
-
 skipFormating='false'
 if [[ $1 == "-s" ]]; then
     skipFormating='true'
@@ -31,45 +20,11 @@ fi
 codename=`lsb_release -a | grep Codename | awk '{ print $2 }'`
 depotpartenaire="deb http://archive.canonical.com/ubuntu $codename partner"
 
-# si on utilise le serveur du local ANS
-if [ $localServer == "true" ]; then
-	#IP du serveur
-	echo "Entrez l'adresse IP du serveur"
-	read serveur
-	echo "Adresse IP du serveur: "$serveur
-
-	# Mise à l'heure avec le serveur local
-	wget  http://$serveur/ubuntu/Packages/set_date.sh
-	chmod +x set_date.sh
-	./set_date.sh
-	
-	# Récupération du fichier sources.list et test réseau.
-	if [[ $distrib == *"Ubuntu 20"* ]]; then
-			soixantequatrebits="true"
-		wget  http://$serveur/ubuntu/Packages/sources.list_64bits
-		if [ $? != 0 ]; then
-			echo "Récuperation des sources.list impossible, vérifiez l'accés au serveur"
-			exit
-			fi
-			cat sources.list_64bits | sed "s/serveur/$serveur/g" > /etc/apt/sources.list
-	else
-			soixantequatrebits="false"
-		wget http://$serveur/ubuntu/Packages/sources.list_32bits
-				if [ $? != 0 ]; then
-			echo "Récuperation des sources.list impossible, vérifiez l'accés au serveur"
-			exit
-			fi
-			cat sources.list_32bits | sed "s/serveur/$serveur/g" > /etc/apt/sources.list
-	fi
-fi
-
-if [ $localServer == "false" ]; then
-	# test si on a une connexion internet
-	ping -q -w1 -c1 google.com &>/dev/null
-	if [ $? != 0 ]; then
-		echo "La connexion internet doit être activée"
-		exit
-	fi
+# test si on a une connexion internet
+ping -q -w1 -c1 google.com &>/dev/null
+if [ $? != 0 ]; then
+	echo "La connexion internet doit être activée"
+	exit
 fi
 
 # Vérification que la version du script est à jour
@@ -243,214 +198,9 @@ echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select t
 sudo apt-get install -y ttf-mscorefonts-installer
 
 
-# installation des outils de diagnostique
-apt-get -y install memtester hdparm
-apt-get -y install libcpanel-json-xs-perl
-apt-get -y install inxi
 
 clear
-echo "------------------------------------------------------- Diagnostique et effacement des données -------------------------------------------------------------"
-echo ""
 echo "Les installations sont terminées."
-
-echo ""
-echo "Démarrage du test mémoire"
-test_mem=$(memtester 250M 1)
-result=$?
-if [ $? == 0 ]; then
-    resultat="Aucune erreur détectée."
-    flag="success"
-else
-    resultat="Erreurs détectées ! La mémoire de cette machine semble défectueuse"
-    flag="danger"
-fi
-json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Mémoire\",\"Flag\": \"$flag\",\"Description\": \" $resultat\" }"
-curl -X 'POST' \
-  "$ANS_ADDR/api/diagnostics" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d "$json_var"
-echo ""
-echo "Résultat du test mémoire : $resultat"
-
-
-echo ""
-echo "Démarrage du test de lecture sur disque"
-test_mem=$(hdparm -t /dev/sda | grep Timing)
-json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Disque dur\",\"Description\": \" $test_mem\" }"
-curl -X 'POST' \
-  "$ANS_ADDR/api/diagnostics" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d "$json_var"
-echo ""
-echo "Test de lecture sur disque terminé."
-
-echo ""
-
-# Remontée de la configuration matérielle
-hw=$(inxi -G -s -N -A -C -M -I --output json --output-file "/home/user/info.json")
-json=$(cat /home/user/info.json)
-
-json_var="$nom_machine|HW|$json"
-curl -X 'POST' \
-  "$ANS_ADDR/api/config" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d "$json_var"
-echo " : Remontée de la configuration matérielle"
-
-# Remontée des infos sur les disques
-disk=$(lsblk --json -o path,model,serial,size,type,wwn,vendor -d | grep -v loop)
-json_var="$nom_machine|Disque|$disk"
-curl -X 'POST' \
-  "$ANS_ADDR/api/config" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d "$json_var"
-echo " : Remontée des informations sur les disques"
-
-# Identification du type de pc (portable ou fixe) en fonction de la présence d'une batterie
-batterie=$(upower -e | grep battery)
-if [[ $? == 0 ]]; then
-	# s'il y a une batterie --> il s'agit d'un pc portable
-	curl -X 'GET' "$ANS_ADDR/api/config/setMaterielType/$nom_machine/Laptop"
-
-	laptop=true
-	infosBatterie=$(upower -i $batterie)
-	json_var="$nom_machine|Batterie|$infosBatterie"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/config" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo " : Remontée des infos sur la batterie"
-
-	# vérification que le wifi fonctionne
-	echo ""
-	echo "Vérification du wifi"
-	wifi_networks=$(nmcli dev wifi list)
-	if [[ $wifi_networks == "" ]]; then
-		wifi=false
-		flag="danger"
-		resultat="Le wifi de cette machine n'est pas opérationnel."
-	else
-		wifi=true
-		flag="success"
-		resultat="Le wifi de cette machine fonctionne."
-	fi
-	json_var="{\"AnsId\": \"$nom_machine\",\"Type\": \"Wifi\",\"Flag\": \"$flag\",\"Description\": \" $resultat\" }"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/diagnostics" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo ""
-	echo "Résultat du test wifi : $resultat"
-else
-	# pas de batterie --> pc fixe --> pas de test wifi
-	curl -X 'GET' "$ANS_ADDR/api/config/setMaterielType/$nom_machine/PC%20Fixe"
-	laptop=false
-	wifi=false
-	echo "pas de batterie"
-fi
-
-
-if [[ $skipFormating == 'false' ]]; then
-	# Effacement des disques
-	echo "Démarrage de l'effacement des données de l'espace libre du disque dur. Cette opération peut être longue si le débit en écriture est faible. Veuillez patienter et ne pas éteindre la machine..."
-	echo ""
-
-	inxi -d | grep ID-1
-	driveDetails="$(inxi -d | grep ID-1 | tr ' ' '\n')"
-	for detail in $driveDetails
-	do
-		if [[ $detail =~ ^/dev.*  ]]; then
-		currentDrive=$detail
-		fi
-	done
-
-	echo "Effacement du disque : $currentDrive"
-	echo ""
-	json_var="$nom_machine|Effacement|{\"title\":\"Démarrage de l'effacement du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/config" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo " : Remontée de la date-heure de démarrage du formatage"  
-
-	/home/user/ANS-public/bin/fillsystemdisk
-	rm ./remplissage
-	rm ./thread_file*
-
-	json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque $currentDrive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/config" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo " : Remontée de la date-heure de fin du formatage"
-
-	json_var="$nom_machine|Effacement|{\"title\":\"Statut du disque $currentDrive\", \"description\": \"Effacé\"}"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/config" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo " : Remontée du statut de formatage"
-
-	json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $currentDrive\", \"description\": \"zero-fill one-pass\"}"
-	curl -X 'POST' \
-	"$ANS_ADDR/api/config" \
-	-H 'accept: application/json' \
-	-H 'Content-Type: application/json' \
-	-d "$json_var"
-	echo " : Remontée des de la méthode de formatage"
-
-	drives="$(inxi -d | grep ID | grep -v ID-1 | tr ' ' '\n')"
-	for drive in $drives
-	do
-		if [[ $drive =~ ^/dev.*  ]]; then
-		if [[ $drive != $currentDrive ]]; then
-			echo "Effacement du disque : $drive"
-			echo ""
-			
-			json_var="$nom_machine|Effacement|{\"title\":\"Démarrage de l'effacement du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-			curl -X 'POST' \
-			"$ANS_ADDR/api/config" \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-			-d "$json_var"
-			echo " : Remontée de la date-heure de démarrage du formatage"
-			dd if=/dev/urandom of=$drive bs=4096 status=progress
-			json_var="$nom_machine|Effacement|{\"title\":\"Fin de l'effacement du disque $drive\", \"description\": \"$(date +"%d-%m-%Y %H-%M-%S")\"}"
-			curl -X 'POST' \
-			"$ANS_ADDR/api/config" \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-			-d "$json_var"
-			echo " : Remontée de la date-heure de fin du formatage"
-			
-			json_var="$nom_machine|Effacement|{\"title\":\"Statut du disque $drive\", \"description\": \"Effacé\"}"
-			curl -X 'POST' \
-			"$ANS_ADDR/api/config" \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-			-d "$json_var"
-			echo " : Remontée du statut de formatage"
-
-			json_var="$nom_machine|Effacement|{\"title\":\"Méthode d'effacement du disque $drive\", \"description\": \"random-fill one-pass\"}"
-			curl -X 'POST' \
-			"$ANS_ADDR/api/config" \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-			-d "$json_var"
-			echo " : Remontée des de la méthode de formatage"
-		fi
-		fi
-	done
-fi
 
 # vérifications
 test -e /home/user/Desktop/$fileName
@@ -555,7 +305,6 @@ echo "                  ""VXXXXXXXXXXXXXXXXXXV"" "
 
 
 cd ..
-rm /home/user/infos.json
 rm /home/user/Bureau/applaudissements.wav
 rm /home/user/Desktop/applaudissements.wav
 rm -R /home/user/ANS-public
