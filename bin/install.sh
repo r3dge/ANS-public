@@ -19,5 +19,5 @@ sudo apt install -y nvme-cli
 sudo apt install -y memtester
 
 # nouvelles dépendances
-sudo apt install -y memtester
+sudo apt install -y upower
 
