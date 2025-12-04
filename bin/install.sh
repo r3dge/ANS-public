@@ -20,4 +20,5 @@ sudo apt install -y memtester
 
 # nouvelles dépendances
 sudo apt install -y upower
+sudo apt install -y network-manager
 
